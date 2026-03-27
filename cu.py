@@ -37,7 +37,7 @@ class Calculator:
                 btn.grid(row=row, column=col, columnspan=2, padx=3, pady=3, sticky="nsew")  # 边距缩小20%
             elif text == "C":
                 # C 按钮支持双击清除历史记录
-                btn = tk.Button(self.window, text=text, font=("Arial", 20),
+                btn = tk.Button(self.window, text=text, font=("Arial", 16),  # 字体缩小20% (原20)
                                command=lambda t=text: self.on_button_click(t))
                 btn.grid(row=row, column=col, padx=3, pady=3, sticky="nsew")  # 边距缩小20%
                 btn.bind("<Double-Button-1>", lambda e: self.clear_history())
