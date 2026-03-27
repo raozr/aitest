@@ -5,7 +5,7 @@ class Calculator:
     def __init__(self):
         self.window = tk.Tk()
         self.window.title("计算器")
-        self.window.geometry("600x950")  # 增加高度为历史记录区域预留空间
+        self.window.geometry("480x760")  # 窗口尺寸缩小20% (原600x950)
         self.window.resizable(False, False)
 
         # 历史记录列表
@@ -15,9 +15,9 @@ class Calculator:
         self.display_var = tk.StringVar()
         self.display_var.set("0")
 
-        display = tk.Entry(self.window, textvariable=self.display_var, font=("Arial", 96, "bold"),  # 增大字体
+        display = tk.Entry(self.window, textvariable=self.display_var, font=("Arial", 77, "bold"),  # 字体缩小20% (原96)
                           justify="right", state="readonly", bg="white")
-        display.grid(row=0, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
+        display.grid(row=0, column=0, columnspan=4, padx=8, pady=8, sticky="nsew")  # 边距缩小20%
         
         # 按钮配置
         buttons = [
@@ -32,33 +32,33 @@ class Calculator:
         for (text, row, col) in buttons:
             if text == "0":
                 # 0 按钮占据两列
-                btn = tk.Button(self.window, text=text, font=("Arial", 20),  # 增大字体
+                btn = tk.Button(self.window, text=text, font=("Arial", 16),  # 字体缩小20% (原20)
                                command=lambda t=text: self.on_button_click(t))
-                btn.grid(row=row, column=col, columnspan=2, padx=4, pady=4, sticky="nsew")
+                btn.grid(row=row, column=col, columnspan=2, padx=3, pady=3, sticky="nsew")  # 边距缩小20%
             elif text == "C":
                 # C 按钮支持双击清除历史记录
                 btn = tk.Button(self.window, text=text, font=("Arial", 20),
                                command=lambda t=text: self.on_button_click(t))
-                btn.grid(row=row, column=col, padx=4, pady=4, sticky="nsew")
+                btn.grid(row=row, column=col, padx=3, pady=3, sticky="nsew")  # 边距缩小20%
                 btn.bind("<Double-Button-1>", lambda e: self.clear_history())
             else:
-                btn = tk.Button(self.window, text=text, font=("Arial", 20),  # 增大字体
+                btn = tk.Button(self.window, text=text, font=("Arial", 16),  # 字体缩小20% (原20)
                                command=lambda t=text: self.on_button_click(t))
-                btn.grid(row=row, column=col, padx=4, pady=4, sticky="nsew")
+                btn.grid(row=row, column=col, padx=3, pady=3, sticky="nsew")  # 边距缩小20%
 
         # 历史记录框架（位于窗口底部）
         history_frame = tk.Frame(self.window, bg="#f0f0f0")
-        history_frame.grid(row=6, column=0, columnspan=4, padx=10, pady=(10, 10), sticky="nsew")
+        history_frame.grid(row=6, column=0, columnspan=4, padx=8, pady=(8, 8), sticky="nsew")  # 边距缩小20%
 
         # 历史记录标签
-        history_label = tk.Label(history_frame, text="历史记录", font=("Arial", 12), bg="#f0f0f0")
+        history_label = tk.Label(history_frame, text="历史记录", font=("Arial", 10), bg="#f0f0f0")  # 字体缩小 (原12)
         history_label.pack(anchor="w")
 
         # 历史记录列表（带滚动条）
         history_scrollbar = tk.Scrollbar(history_frame)
         history_scrollbar.pack(side="right", fill="y")
 
-        self.history_listbox = tk.Listbox(history_frame, font=("Arial", 14), height=5,
+        self.history_listbox = tk.Listbox(history_frame, font=("Arial", 11), height=4,  # 字体缩小20%，高度调整 (原14/5)
                                           justify="right", yscrollcommand=history_scrollbar.set)
         self.history_listbox.pack(fill="both", expand=True)
         history_scrollbar.config(command=self.history_listbox.yview)
