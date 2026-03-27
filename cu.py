@@ -15,9 +15,10 @@ class Calculator:
         self.display_var = tk.StringVar()
         self.display_var.set("0")
 
-        display = tk.Entry(self.window, textvariable=self.display_var, font=("Arial", 77, "bold"),  # 字体缩小20% (原96)
+        # 创建显示屏
+        display = tk.Entry(self.window, textvariable=self.display_var, font=("Arial", 77, "bold"),
                           justify="right", state="readonly", bg="white")
-        display.grid(row=0, column=0, columnspan=4, padx=8, pady=8, sticky="nsew")  # 边距缩小20%
+        display.grid(row=0, column=0, columnspan=4, padx=8, pady=2, sticky="ew")  # pady减小，高度降低约25%
         
         # 按钮配置
         buttons = [
@@ -63,9 +64,14 @@ class Calculator:
         self.history_listbox.pack(fill="both", expand=True)
         history_scrollbar.config(command=self.history_listbox.yview)
 
-        # 配置网格权重（7行：0-显示屏, 1-5按钮, 6-历史记录）
-        for i in range(7):
-            self.window.grid_rowconfigure(i, weight=1)
+        # 配置网格权重
+        # row 0: 显示屏（高度降低，权重设为0，不随窗口拉伸）
+        self.window.grid_rowconfigure(0, weight=0)
+        # row 1-5: 按钮区域（均匀分配主要空间）
+        for i in range(1, 6):
+            self.window.grid_rowconfigure(i, weight=2)
+        # row 6: 历史记录（分配较少空间）
+        self.window.grid_rowconfigure(6, weight=1)
         for i in range(4):
             self.window.grid_columnconfigure(i, weight=1)
             
