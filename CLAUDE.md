@@ -6,91 +6,146 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概览
 
-这是一个使用 Python tkinter 库构建的简单桌面计算器应用程序。整个应用程序包含在一个文件中（`cu.py`），创建一个具有基本算术运算功能的 GUI 计算器。
+一个使用 Python tkinter 构建的多功能桌面计算器，iOS 深色风格 UI，支持基础计算、科学计算、汇率转换和历史记录四种模式。单文件架构（`cu.py`，约 1070 行），仅依赖 Python 标准库。
 
-## 运行应用程序
-
-由于这是一个 tkinter GUI 应用程序，运行时需要显示服务器。在无头环境中，您可能会看到 tkinter 导入错误或显示连接错误——这是正常现象，不是代码问题。
+## 运行命令
 
 ```bash
-# 运行计算器（需要图形界面显示）
-python cu.py
+python cu.py              # 运行计算器（需要图形界面）
+pip install pyinstaller    # 首次打包前安装
+pyinstaller --onefile --windowed --name "计算器" --distpath dist cu.py  # 打包为 Windows exe
+py -c "import py_compile; py_compile.compile('cu.py', doraise=True); print('OK')"  # 语法检查
 ```
+
+- **无外部依赖**：仅使用 Python 标准库（tkinter, math）
+- **没有测试套件**，手动验证
 
 ## 代码架构
 
-### 单文件结构
-
-- **`cu.py`** - 完整的计算器应用程序
-  - `Calculator` 类 - 封装 UI 和逻辑的主应用程序类
-  - 使用 tkinter 的网格布局系统排列按钮
-  - 窗口大小：480x760 像素（已缩小20%），不可调整大小
-
-### 布局结构（7行 x 4列）
+### 单文件结构 (`cu.py`)
 
 ```
-row 0: 显示屏（Entry，固定高度，weight=0）
-row 1-5: 按钮区域（5行，weight=2，占据主要空间）
-row 6: 历史记录区（Listbox，weight=1，位于底部）
+RoundedButton 类         — iOS 风格圆角矩形按钮（tk.Canvas 绘制，smooth polygon）
+BaseMode 类              — 基础四则运算（5×4 网格，iOS 按钮布局）
+ScientificMode 类        — 科学计算（4×4 网格，16 种函数）
+CurrencyMode 类          — 汇率转换（卡片式布局，滚动容器，6 种货币固定汇率）
+HistoryMode 类           — 历史记录查看（Listbox + 使用/清空按钮）
+Calculator 类            — 主应用：窗口、显示屏、状态管理、模式切换
+main 入口                — 创建 Calculator 实例
 ```
 
-### Calculator 类
+### 核心架构：模式系统
 
-`Calculator` 类管理以下内容：
+四种模式通过 `Calculator.modes` 字典管理，每个模式遵循统一接口：
 
-1. **UI 组件**
-   - `display_var` - 绑定到显示输入框的 StringVar
-   - `history_listbox` - 历史记录列表（带滚动条）
-   - 按钮网格布局为 4 列 × 5 行（第1-5行）
-   - 按钮包括：数字 0-9、小数点 (.)、运算符 (+, -, ×, ÷)、等号 (=)、清除 (C)、符号切换 (±)、百分比 (%)
+- `show()` — 将 `self.frame` 用 `grid()` 显示到 `content_frame`
+- `hide()` — 用 `grid_forget()` 从 `content_frame` 移除
 
-2. **状态管理**
-   - `current_input` - 当前正在输入的数字（字符串）
-   - `previous_input` - 二元运算的第一个操作数
-   - `operation` - 当前运算符 (+, -, ×, ÷)
-   - `should_reset_display` - 下次输入数字时重置显示的标志
-   - `history` - 历史记录列表（最多保存50条）
+```
+Calculator
+├── 顶层窗口: tk.Tk (480×750 / 480×650)
+│   ├── row 0: top_frame
+│   │   ├── icon_frame（📋 + mode_label + ☰）
+│   │   └── display Entry（只读，Arial 48 bold，汇率/历史模式下隐藏）
+│   └── row 1: content_frame（weight=1，模式界面容器，grid 布局）
+├── 状态变量: current_input, previous_input, operation, should_reset_display, history
+└── modes: {"基础": BaseMode, "科学": ScientificMode, "汇率": CurrencyMode, "历史": HistoryMode}
+```
 
-3. **主要方法**
-   - `on_button_click(value)` - 将按钮点击路由到对应处理程序
-   - `input_number(num)` - 处理数字和小数点输入
-   - `input_operation(op)` - 处理运算符选择
-   - `calculate_result()` - 执行计算，并添加记录到历史
-   - `clear_all()` - 重置计算器状态
-   - `clear_history()` - 清除历史记录列表
-   - `toggle_sign()` - 切换当前数值的正负号
-   - `percentage()` - 除以 100
-   - `update_display()` - 刷新显示并格式化（超过12位字符时切换为科学计数法）
+### 关键设计决策
 
-### 显示行为
+#### `RoundedButton` — iOS 风格按钮
+- 继承 `tk.Canvas`，用 `create_polygon(smooth=True)` 绘制圆角矩形
+- 构造参数：`text, command, corner_radius=22, bg_color, fg_color, font, width, height`
+- 按钮类型分三种配色：数字键深灰 `#333333`、功能键浅灰 `#A5A5A5`+黑字、操作符橙色 `#FF9500`
+- 交互：悬停变亮 (`_lighten`)、按下变暗 (`_darken`)、手型光标
+- **显式指定 width/height**（默认 80×80），否则 Canvas 默认尺寸 378×265 会破坏 pack() 布局
 
-- 超过 12 个字符的数字将转换为科学计数法（`{:.6e}`）
-- 除以零时会显示错误消息框并清除计算器
-- 整数结果不带小数位显示
-- 计算器使用 Unicode 运算符（×、÷）而非 ASCII 符号（*、/）
+#### 显示屏可见性
+- 基础/科学模式：显示
+- 汇率模式：隐藏（用不到）
+- 历史模式：隐藏（用不到）
+- 切换模式时通过 `pack()` / `pack_forget()` 控制
 
-### 历史记录功能
+#### 计算状态机
+- `current_input` / `previous_input` / `operation` / `should_reset_display` 四个状态变量
+- 超过 12 字符自动转科学计数法 `"{:.6e}"`
+- 浮点结果做 `round(result, 10)` 截断
+- `history` 列表最多 50 条，格式 `"a op b = result"`
 
-- 每次完成计算（按下"="）后自动添加记录
-- 格式：`前操作数 运算符 后操作数 = 结果`
-- 示例：`12.0 + 5.0 = 17.0`
-- 双击 **C** 按钮可清空历史记录
-- 最多保存 50 条记录，超过时自动移除最旧的
+#### 汇率模式 (CurrencyMode)
+- `RATES` 字典（以 USD 为基准的固定汇率），`CURRENCY_NAMES`，`CURRENCY_COLORS`
+- 可滚动 Canvas 容器，卡片式布局（#1C1C1E 卡片 / #2C2C2E 表面 / #FF9500 强调色）
+- 转换结果直接在转换卡片内显示（result_from / result_amount / result_currency）
+- 货币选择通过 `tk.Menu` 弹出菜单
 
-### 网格权重配置
+#### 三角函数
+- 使用角度制输入，内部通过 `math.radians()` 转弧度
+
+#### 模式切换
+- 📋 按钮直接切换到历史模式
+- ☰ 弹出模式选择弹窗（深色卡片风格），仅列出基础/科学/汇率三种
+- 历史模式下点击 ☰ 不弹窗，直接 `switch_to_calc_mode()` 回到上一个计算模式
+- 历史记录双击或点击「使用」将结果写回显示屏并切回计算模式
+
+#### PyInstaller 打包
+- 使用 `--onefile --windowed` 参数，输出 `dist/计算器.exe`
+- 打包后约 10 MB，可在无 Python 环境的 Windows 10/11 上运行
+
+## 配色方案
 
 ```python
-self.window.grid_rowconfigure(0, weight=0)  # 显示屏固定
-for i in range(1, 6):
-    self.window.grid_rowconfigure(i, weight=2)  # 按钮区域主要空间
-self.window.grid_rowconfigure(6, weight=1)  # 历史记录较少空间
+# iOS 计算器深色主题
+COLOR_BG        = "#000000"      # 窗口背景
+COLOR_NUM       = "#333333"      # 数字键
+COLOR_FUNC      = "#A5A5A5"      # 功能键（C/±/%）
+COLOR_OP        = "#FF9500"      # 操作符键（÷×-+=）
+COLOR_FUNC_TEXT = "#000000"      # 功能键文字
+COLOR_DISPLAY_TEXT = "#FFFFFF"
+CARD_BG         = "#1C1C1E"      # 卡片背景（汇率模式）
+SURFACE_BG      = "#2C2C2E"      # 表面背景（汇率模式）
 ```
 
-## 开发注意事项
+## 各模式按钮布局
 
-- 除 Python 标准库外无其他外部依赖
-- 没有测试套件
-- 无需构建过程
-- 应用程序创建固定大小的窗口，字体 Arial 16-77 bold
-- 所有按钮命令使用 lambda 在创建时捕获其文本值
-- C 按钮支持双击事件绑定清除历史记录
+**基础模式** (5×4):
+```
+C     ±     %     ÷
+7     8     9     ×
+4     5     6     -
+1     2     3     +
+0 (colspan=2)  .   =
+```
+
+**科学模式** (4×4):
+```
+sin  cos  tan  ln
+log  x²   x³   xʸ
+√    ∛    π    e
+(    )    n!   1/x
+```
+
+## 灰度模式和边界情况
+
+- 浮点误差：`0.1 + 0.2` 会显示 `0.30000000000000004`，只用 `round(result, 10)` 减轻
+- 除以零：弹出 `messagebox.showerror` 并清空
+- 显示屏截断：超过 12 字符 → `"{:.6e}"` 科学计数法
+- 历史记录上限 50 条，超出时从头部移除
+- 汇率输入验证：无效输入静默忽略，不清空
+
+## 文件清单
+
+```
+cu.py                  — 主程序（单文件，约 1070 行）
+CLAUDE.md              — 本文件
+README.md              — 项目说明
+spec-ios-ui.md         — iOS 风格 UI 改造规范（已实施）
+spec-packaging.md      — PyInstaller 打包规范（已实施）
+dist/计算器.exe         — 打包产物（gitignored）
+```
+
+## 边界约定
+
+- **Always do:** 保持所有模式深色主题一致，保留全部计算逻辑不改 backend，显式指定 RoundedButton 的 width/height
+- **Ask first:** 修改窗口尺寸、增减功能按钮、改变模式切换逻辑、添加外部依赖
+- **Never do:** 不引入外部依赖、不改核心计算逻辑、不提交 `.exe` 到 git
