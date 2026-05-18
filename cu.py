@@ -346,6 +346,11 @@ class CurrencyMode:
         sel_row = tk.Frame(inner, bg=self.CARD_BG)
         sel_row.pack(fill="x", pady=(0, 16))
 
+        def _bind_children(widget, callback):
+            widget.bind("<Button-1>", callback)
+            for child in widget.winfo_children():
+                _bind_children(child, callback)
+
         # From
         from_frame = tk.Frame(sel_row, bg=self.CARD_BG)
         from_frame.pack(side="left", fill="x", expand=True)
@@ -366,7 +371,7 @@ class CurrencyMode:
         self.from_label.pack(side="left")
         tk.Label(from_inner, text="▾", font=("Arial", 10),
                 bg=self.SURFACE_BG, fg=self.TEXT_TERTIARY).pack(side="right")
-        from_selector.bind("<Button-1>", lambda e: self._show_currency_menu("from"))
+        _bind_children(from_selector, lambda e: self._show_currency_menu("from"))
 
         # Swap
         swap_frame = tk.Frame(sel_row, bg=self.CARD_BG)
@@ -398,7 +403,7 @@ class CurrencyMode:
         self.to_label.pack(side="left")
         tk.Label(to_inner, text="▾", font=("Arial", 10),
                 bg=self.SURFACE_BG, fg=self.TEXT_TERTIARY).pack(side="right")
-        to_selector.bind("<Button-1>", lambda e: self._show_currency_menu("to"))
+        _bind_children(to_selector, lambda e: self._show_currency_menu("to"))
 
         # --- 转换按钮 ---
         convert_frame = tk.Frame(inner, bg=self.CARD_BG)
