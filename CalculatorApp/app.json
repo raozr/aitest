@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "计算器",
+    "slug": "calculator-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.raozhengrong.calculator",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#000000"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "bdd1ff36-aaa6-4911-8b11-e76bcc24374b"
+      }
+    },
+    "owner": "raozhengrong"
+  }
+}
