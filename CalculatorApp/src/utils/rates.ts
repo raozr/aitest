@@ -2,7 +2,7 @@ export interface RatesMap {
   [code: string]: number;
 }
 
-const FALLBACK_RATES: RatesMap = {
+export const FALLBACK_RATES: RatesMap = {
   USD: 1.0,
   CNY: 7.25,
   JPY: 151.5,
@@ -29,17 +29,14 @@ export const CURRENCY_COLORS: Record<string, string> = {
   KRW: '#FF9500',
 };
 
+export const SUPPORTED_CURRENCIES = Object.keys(FALLBACK_RATES);
+
 export async function fetchRates(): Promise<RatesMap> {
-  try {
-    const res = await fetch('https://open.er-api.com/v6/latest/USD');
-    const data = await res.json();
-    if (data?.rates) {
-      return data.rates;
-    }
-    return FALLBACK_RATES;
-  } catch {
-    return FALLBACK_RATES;
-  }
+  const res = await fetch('https://open.er-api.com/v6/latest/USD');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (!data?.rates) throw new Error('无效的响应格式');
+  return data.rates;
 }
 
 export function convertCurrency(

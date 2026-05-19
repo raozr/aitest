@@ -67,6 +67,11 @@ const SCIENTIFIC_BUTTONS: BtnDef[] = [
   { label: '1/x', type: 'function' },
 ];
 
+const MODE_LABELS: Record<string, string> = {
+  basic: '基础',
+  scientific: '科学',
+};
+
 const OP_MAP: Record<string, Operator> = {
   '+': '+',
   '-': '-',
@@ -117,32 +122,23 @@ export default function CalculatorScreen() {
     }
   }, [route.params?.restoreValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Remove header title, use own toolbar instead
-  useEffect(() => {
-    navigation.setOptions({ headerShown: false });
-  }, [navigation]);
-
   const screenWidth = Dimensions.get('window').width;
   const cols = 4;
   const gap = 8;
   const btnSize = (screenWidth - gap * (cols + 1)) / cols;
 
+  const buttonActions: Record<string, (label: string) => void> = {
+    digit: (l) => { if (l) handleDigit(l); },
+    op: (l) => { if (l && OP_MAP[l]) handleOperation(OP_MAP[l]); },
+    equals: () => handleEquals(),
+    clear: () => handleClear(),
+    toggle: () => handleToggleSign(),
+    percent: () => handlePercent(),
+  };
+
   const onButtonPress = (btn: BtnDef) => {
-    if (btn.action === 'digit' && btn.label) {
-      handleDigit(btn.label);
-    } else if (btn.action === 'op' && btn.label && OP_MAP[btn.label]) {
-      handleOperation(OP_MAP[btn.label]);
-    } else if (btn.action === 'equals') {
-      handleEquals();
-    } else if (btn.action === 'clear') {
-      handleClear();
-    } else if (btn.action === 'toggle') {
-      handleToggleSign();
-    } else if (btn.action === 'percent') {
-      handlePercent();
-    } else if (!btn.action) {
-      handleScientific(btn.label);
-    }
+    const action = btn.action ? buttonActions[btn.action] : handleScientific;
+    action(btn.label);
   };
 
   const renderGrid = () => {
@@ -232,7 +228,7 @@ export default function CalculatorScreen() {
               { label: '科学', icon: '🔬' },
               { label: '汇率', icon: '💱' },
             ].map((item) => {
-              const isCurrent = item.label === (calcMode === 'basic' ? '基础' : calcMode === 'scientific' ? '科学' : '');
+              const isCurrent = item.label === MODE_LABELS[calcMode];
               return (
                 <Pressable
                   key={item.label}
@@ -242,7 +238,7 @@ export default function CalculatorScreen() {
                     if (item.label === '汇率') {
                       navigation.navigate('Currency');
                     } else {
-                      setCalcMode(item.label === '基础' ? 'basic' : 'scientific');
+                      setCalcMode(item.label === MODE_LABELS.basic ? 'basic' : 'scientific');
                     }
                   }}
                 >

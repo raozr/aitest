@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { CalculatorState, Operator, HistoryEntry } from '../types';
 import {
   createInitialState,
@@ -29,11 +29,10 @@ interface UseCalculatorReturn {
   loadHistory: (entries: HistoryEntry[]) => void;
 }
 
-let idCounter = 0;
-
 export function useCalculator(): UseCalculatorReturn {
   const [state, setState] = useState<CalculatorState>(createInitialState);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const idCounterRef = useRef(0);
 
   const addHistoryEntry = useCallback(
     (entry: HistoryEntry) => {
@@ -61,7 +60,7 @@ export function useCalculator(): UseCalculatorReturn {
       try {
         const result = calculateResult(prev);
         const entry: HistoryEntry = {
-          id: String(++idCounter),
+          id: String(++idCounterRef.current),
           expression: formatHistoryEntry(
             prev.previousInput,
             prev.operation,
@@ -74,7 +73,12 @@ export function useCalculator(): UseCalculatorReturn {
         addHistoryEntry(entry);
         return result;
       } catch {
-        return prev;
+        return {
+          currentInput: '错误',
+          previousInput: '',
+          operation: null,
+          shouldResetDisplay: true,
+        };
       }
     });
   }, [addHistoryEntry]);
@@ -125,7 +129,7 @@ export function useCalculator(): UseCalculatorReturn {
   const loadHistory = useCallback((entries: HistoryEntry[]) => {
     setHistory(entries);
     if (entries.length > 0) {
-      idCounter = Math.max(...entries.map((e) => parseInt(e.id, 10)));
+      idCounterRef.current = Math.max(...entries.map((e) => parseInt(e.id, 10)));
     }
   }, []);
 

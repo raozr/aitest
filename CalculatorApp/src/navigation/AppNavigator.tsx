@@ -27,7 +27,7 @@ export default function AppNavigator() {
       <Stack.Screen
         name="Calculator"
         component={CalculatorScreen}
-        options={{ title: '计算器' }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="Currency"

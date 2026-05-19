@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { fetchRates, RatesMap } from '../utils/rates';
+import { fetchRates, FALLBACK_RATES, RatesMap } from '../utils/rates';
 
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
@@ -29,7 +29,8 @@ export function useExchangeRates(): UseExchangeRatesReturn {
       setRates(data);
       lastFetch.current = now;
     } catch {
-      setError('获取汇率失败');
+      setRates(FALLBACK_RATES);
+      setError('获取汇率失败，使用预设汇率');
     } finally {
       setIsLoading(false);
     }

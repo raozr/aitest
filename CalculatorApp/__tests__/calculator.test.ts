@@ -146,6 +146,26 @@ describe('calculateResult', () => {
     s = calculateResult(s);
     expect(s.currentInput).toBe('8');
   });
+
+  it('returns state unchanged when no operation set', () => {
+    const s = createInitialState();
+    const result = calculateResult(s);
+    expect(result).toBe(s);
+  });
+
+  it('returns state unchanged when no previous input', () => {
+    const s = { currentInput: '5', previousInput: '', operation: '+' as const, shouldResetDisplay: false };
+    const result = calculateResult(s);
+    expect(result).toBe(s);
+  });
+
+  it('throws Chinese error message on division by zero', () => {
+    let s = createInitialState();
+    s = inputNumber(s, '5');
+    s = inputOperation(s, '÷');
+    s = inputNumber(s, '0');
+    expect(() => calculateResult(s)).toThrow('不能除以零');
+  });
 });
 
 // --- toggleSign ---

@@ -9,7 +9,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { colors } from '../constants/theme';
-import { CURRENCY_NAMES, CURRENCY_COLORS } from '../utils/rates';
+import { CURRENCY_NAMES, CURRENCY_COLORS, SUPPORTED_CURRENCIES } from '../utils/rates';
 
 interface CurrencySelectorProps {
   value: string;
@@ -19,7 +19,7 @@ interface CurrencySelectorProps {
 export default function CurrencySelector({ value, onChange }: CurrencySelectorProps) {
   const [visible, setVisible] = useState(false);
 
-  const codes = ['USD', 'CNY', 'JPY', 'EUR', 'GBP', 'KRW'];
+  const codes = SUPPORTED_CURRENCIES;
 
   const handleSelect = (code: string) => {
     onChange(code);
