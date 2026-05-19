@@ -6,8 +6,8 @@ import {
   Modal,
   FlatList,
   StyleSheet,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from '../constants/theme';
 import { CURRENCY_NAMES, CURRENCY_COLORS, SUPPORTED_CURRENCIES } from '../utils/rates';
 
