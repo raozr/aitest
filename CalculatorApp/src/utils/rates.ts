@@ -3,6 +3,7 @@ export interface RatesMap {
 }
 
 export const FALLBACK_RATES: RatesMap = {
+  HKD: 7.8,
   USD: 1.0,
   CNY: 7.25,
   JPY: 151.5,
@@ -12,6 +13,7 @@ export const FALLBACK_RATES: RatesMap = {
 };
 
 export const CURRENCY_NAMES: Record<string, string> = {
+  HKD: '港币',
   USD: '美元',
   CNY: '人民币',
   JPY: '日元',
@@ -21,6 +23,7 @@ export const CURRENCY_NAMES: Record<string, string> = {
 };
 
 export const CURRENCY_COLORS: Record<string, string> = {
+  HKD: '#FF9500',
   USD: '#007AFF',
   CNY: '#FF3B30',
   JPY: '#AF52DE',

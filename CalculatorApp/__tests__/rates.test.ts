@@ -64,7 +64,7 @@ describe('convertCurrency', () => {
 // --- SUPPORTED_CURRENCIES as single source of truth ---
 describe('SUPPORTED_CURRENCIES', () => {
   it('includes all expected currencies', () => {
-    expect(SUPPORTED_CURRENCIES).toEqual(['USD', 'CNY', 'JPY', 'EUR', 'GBP', 'KRW']);
+    expect(SUPPORTED_CURRENCIES).toEqual(['HKD', 'USD', 'CNY', 'JPY', 'EUR', 'GBP', 'KRW']);
   });
 
   it('every currency has a name and color', () => {
