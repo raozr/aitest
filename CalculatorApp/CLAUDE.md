@@ -23,6 +23,7 @@ src/
 ├── utils/calculator.ts     — Pure calculation functions (ported from cu.py)
 ├── utils/formatters.ts     — Number formatting, scientific notation
 ├── utils/rates.ts          — Exchange rate API client + fallback rates
+├── utils/speech.ts         — Chinese TTS speech (expo-speech, zh-CN)
 ├── hooks/useCalculator.ts  — Calculator state machine hook
 ├── hooks/useExchangeRates.ts — Rate fetching with 5-min cache
 ├── components/             — Reusable UI components

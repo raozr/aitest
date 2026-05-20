@@ -16,6 +16,7 @@ import { useCalculator } from '../hooks/useCalculator';
 import { loadHistory, saveHistory } from '../storage/history';
 import Display from '../components/Display';
 import ModeSwitcher from '../components/ModeSwitcher';
+import { speakDigit, speakOperator } from '../utils/speech';
 import Button from '../components/Button';
 import { RootStackParamList } from '../navigation/AppNavigator';
 
@@ -128,12 +129,12 @@ export default function CalculatorScreen() {
   const btnSize = (screenWidth - gap * (cols + 1)) / cols;
 
   const buttonActions: Record<string, (label: string) => void> = {
-    digit: (l) => { if (l) handleDigit(l); },
-    op: (l) => { if (l && OP_MAP[l]) handleOperation(OP_MAP[l]); },
-    equals: () => handleEquals(),
+    digit: (l) => { if (l) { handleDigit(l); speakDigit(l); } },
+    op: (l) => { if (l && OP_MAP[l]) { handleOperation(OP_MAP[l]); speakOperator(l); } },
+    equals: () => { speakOperator('='); handleEquals(); },
     clear: () => handleClear(),
     toggle: () => handleToggleSign(),
-    percent: () => handlePercent(),
+    percent: () => { speakOperator('%'); handlePercent(); },
   };
 
   const onButtonPress = (btn: BtnDef) => {

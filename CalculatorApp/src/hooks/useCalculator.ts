@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { CalculatorState, Operator, HistoryEntry } from '../types';
+import { speakResult } from '../utils/speech';
 import {
   createInitialState,
   inputNumber,
@@ -55,10 +56,12 @@ export function useCalculator(): UseCalculatorReturn {
   }, []);
 
   const handleEquals = useCallback(() => {
+    let computedResult: string | null = null;
     setState((prev) => {
       if (!prev.operation || !prev.previousInput) return prev;
       try {
         const result = calculateResult(prev);
+        computedResult = result.currentInput;
         const entry: HistoryEntry = {
           id: String(++idCounterRef.current),
           expression: formatHistoryEntry(
@@ -73,6 +76,7 @@ export function useCalculator(): UseCalculatorReturn {
         addHistoryEntry(entry);
         return result;
       } catch {
+        computedResult = '错误';
         return {
           currentInput: '错误',
           previousInput: '',
@@ -81,6 +85,9 @@ export function useCalculator(): UseCalculatorReturn {
         };
       }
     });
+    if (computedResult !== null) {
+      speakResult(computedResult);
+    }
   }, [addHistoryEntry]);
 
   const handleClear = useCallback(() => {

@@ -9,7 +9,7 @@ iOS 深色风格计算器，支持**桌面端**（Python tkinter）和**移动�
 | **目录** | `cu.py` | `CalculatorApp/` |
 | **框架** | Python tkinter | React Native + Expo SDK 54 |
 | **语言** | Python 3.6+ | TypeScript 5.9 |
-| **代码量** | ~1070 行（单文件） | ~500 行（17 个模块） |
+| **代码量** | ~1070 行（单文件） | ~550 行（18 个模块） |
 | **平台** | Windows / macOS / Linux（需 GUI） | iOS / Android / Web |
 | **测试** | 手动 | Jest（63 项，全部通过） |
 | **构建** | PyInstaller → `dist/计算器.exe` | Gradle → APK / EAS Build |
@@ -76,7 +76,8 @@ CalculatorApp/
 │   ├── constants/theme.ts      # 深色主题色板与字体定义
 │   ├── utils/
 │   │   ├── calculator.ts       # 纯函数计算引擎（从 cu.py 移植）
-│   │   └── rates.ts            # 汇率 API 客户端 + 固定汇率回退
+│   │   ├── rates.ts            # 汇率 API 客户端 + 固定汇率回退
+  │   └── speech.ts           # 中文 TTS 语音播报（expo-speech）
 │   ├── hooks/
 │   │   ├── useCalculator.ts    # 计算器状态机（useReducer 替代方案）
 │   │   └── useExchangeRates.ts # 汇率获取（5 分钟缓存）
@@ -119,13 +120,19 @@ CalculatorApp/
 - 移动版与桌面版共享同一 iOS 深色配色方案
 - 所有颜色在 `constants/theme.ts` 中集中定义
 
+### 中文语音播报
+- 数字键按下时逐个播报中文单字（123 → "一二三"）
+- 操作符播报中文读音（+ → "加"，= → "等于"）
+- 计算结果通过系统 TTS 朗读完整数值（expo-speech，zh-CN，语速 0.75）
+- 科学函数按键、清空、正负切换不播报
+
 ---
 
 ## 四种计算模式
 
 | 模式 | 桌面版布局 | 移动版布局 | 功能 |
 |------|-----------|-----------|------|
-| **基础** | 5×4 网格，iOS 按钮布局 | 4 列自适应网格 | 四则运算、正负切换、百分比 |
+| **基础** | 5×4 网格，iOS 按钮布局 | 4 列自适应网格 | 四则运算、正负切换、百分比、中文语音播报 |
 | **科学** | 4×4 网格，16 种函数 | 4 列网格 + Segment 切换 | sin/cos/tan、ln/log、幂/开方、阶乘、π/e |
 | **汇率** | 卡片布局，可滚动容器 | 卡片布局 + 底部弹出选择 | HKD/USD/CNY/JPY/EUR/GBP/KRW 实时汇率 |
 | **历史** | Listbox 深色主题 | FlatList 滑动列表 | 最多 50 条，点击回填结果 |
@@ -156,6 +163,7 @@ iOS 深色风格，双平台统一配色：
 - 浮点结果截断到 10 位小数
 - 除以零显示"错误"并允许重置
 - 历史记录上限 50 条，超出自动移除最早条目
+- 数字键入时逐个中文单字语音播报（expo-speech zh-CN）
 
 ---
 
@@ -171,6 +179,7 @@ D:\Ai/
 │   └── package.json        # 依赖管理
 ├── CLAUDE.md               # Claude Code 项目指引
 ├── spec-mobile-app.md      # 移动版迁移规范
+├── spec-voice.md           # 语音播报功能规范
 ├── plan-mobile-app.md      # 移动版实施计划
 ├── README.md               # 本文件
 └── .gitignore              # Git 忽略规则
