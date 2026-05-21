@@ -43,3 +43,7 @@ export function speakOperator(op: string): void {
 export function speakResult(value: string): void {
   Speech.speak(value, SPEECH_OPTIONS);
 }
+
+export function stopSpeech(): void {
+  Speech.stop();
+}

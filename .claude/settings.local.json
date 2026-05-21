@@ -5,7 +5,11 @@
       "Bash(py --version)",
       "Bash(py:*)",
       "Bash(start py:*)",
-      "Skill(update-config)"
+      "Skill(update-config)",
+      "Bash(npm test *)",
+      "PowerShell(head *)",
+      "PowerShell(git add *)"
     ]
-  }
+  },
+  "enabledPlugins": {}
 }

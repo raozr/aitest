@@ -16,7 +16,7 @@ import { useCalculator } from '../hooks/useCalculator';
 import { loadHistory, saveHistory } from '../storage/history';
 import Display from '../components/Display';
 import ModeSwitcher from '../components/ModeSwitcher';
-import { speakDigit, speakOperator } from '../utils/speech';
+import { speakDigit, speakOperator, stopSpeech } from '../utils/speech';
 import Button from '../components/Button';
 import { RootStackParamList } from '../navigation/AppNavigator';
 
@@ -114,6 +114,11 @@ export default function CalculatorScreen() {
   useEffect(() => {
     saveHistory(history);
   }, [history]);
+
+  // Stop speech when navigating away
+  useEffect(() => {
+    return () => stopSpeech();
+  }, []);
 
   // Handle restoreValue from History screen
   useEffect(() => {
