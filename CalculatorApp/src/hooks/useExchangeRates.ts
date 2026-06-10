@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchRates, FALLBACK_RATES, RatesMap } from '../utils/rates';
 
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 5 * 60 * 1000;
 
 interface UseExchangeRatesReturn {
   rates: RatesMap;
@@ -15,10 +15,11 @@ export function useExchangeRates(): UseExchangeRatesReturn {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const lastFetch = useRef(0);
+  const ratesRef = useRef<RatesMap>({});
 
-  const load = async (force = false) => {
+  const load = useCallback(async (force = false) => {
     const now = Date.now();
-    if (!force && now - lastFetch.current < CACHE_DURATION && Object.keys(rates).length > 0) {
+    if (!force && now - lastFetch.current < CACHE_DURATION && Object.keys(ratesRef.current).length > 0) {
       return;
     }
 
@@ -27,21 +28,22 @@ export function useExchangeRates(): UseExchangeRatesReturn {
     try {
       const data = await fetchRates();
       setRates(data);
+      ratesRef.current = data;
       lastFetch.current = now;
     } catch {
       setRates(FALLBACK_RATES);
+      ratesRef.current = FALLBACK_RATES;
       setError('获取汇率失败，使用预设汇率');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [load]);
 
-  const refresh = () => load(true);
+  const refresh = useCallback(() => load(true), [load]);
 
   return { rates, isLoading, error, refresh };
 }

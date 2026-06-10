@@ -9,13 +9,13 @@ export function createInitialState(): CalculatorState {
   };
 }
 
+const MAX_INPUT_LENGTH = 15;
+
 export function inputNumber(state: CalculatorState, digit: string): CalculatorState {
   let currentInput = state.currentInput;
-  let shouldReset = state.shouldResetDisplay;
 
   if (state.shouldResetDisplay) {
     currentInput = '0';
-    shouldReset = false;
   }
 
   if (digit === '.') {
@@ -26,6 +26,8 @@ export function inputNumber(state: CalculatorState, digit: string): CalculatorSt
   if (currentInput === '0') {
     return { ...state, currentInput: digit, shouldResetDisplay: false };
   }
+
+  if (currentInput.replace(/[-.]/g, '').length >= MAX_INPUT_LENGTH) return state;
 
   return { ...state, currentInput: currentInput + digit, shouldResetDisplay: false };
 }
@@ -102,14 +104,18 @@ export function percentage(input: string): string {
   return String(roundResult(result));
 }
 
+export function backspace(input: string): string {
+  if (input === '0' || input === '错误') return '0';
+  if (input.length === 1 || (input.startsWith('-') && input.length === 2)) return '0';
+  return input.slice(0, -1);
+}
+
 export function formatDisplay(input: string): string {
+  if (input === '错误') return input;
   if (input.length <= 12) return input;
-  try {
-    const num = parseFloat(input);
-    return num.toExponential(6);
-  } catch {
-    return '错误';
-  }
+  const num = parseFloat(input);
+  if (isNaN(num)) return '错误';
+  return num.toExponential(6);
 }
 
 export function formatHistoryEntry(
@@ -160,8 +166,13 @@ function toRadians(degrees: number): number {
 }
 
 function factorial(n: number): number {
-  if (n <= 1) return 1;
-  return n * factorial(n - 1);
+  if (n < 0) return NaN;
+  if (n > 170) return Infinity;
+  let result = 1;
+  for (let i = 2; i <= n; i++) {
+    result *= i;
+  }
+  return result;
 }
 
 export function roundResult(value: number): number {

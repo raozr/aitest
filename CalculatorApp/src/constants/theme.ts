@@ -5,6 +5,7 @@ export const colors = {
   funcKey: '#A5A5A5',
   funcKeyText: '#000000',
   opKey: '#FF9500',
+  sciKey: '#3A3A3C',
   keyText: '#FFFFFF',
   cardBg: '#1C1C1E',
   surfaceBg: '#2C2C2E',

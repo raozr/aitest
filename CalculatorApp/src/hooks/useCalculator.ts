@@ -9,6 +9,7 @@ import {
   clearAll,
   toggleSign,
   percentage,
+  backspace,
   formatDisplay,
   formatHistoryEntry,
   scientificFunc,
@@ -24,6 +25,7 @@ interface UseCalculatorReturn {
   handleClear: () => void;
   handleToggleSign: () => void;
   handlePercent: () => void;
+  handleBackspace: () => void;
   handleScientific: (func: string) => void;
   setDisplayValue: (value: string) => void;
   clearHistory: () => void;
@@ -56,38 +58,43 @@ export function useCalculator(): UseCalculatorReturn {
   }, []);
 
   const handleEquals = useCallback(() => {
-    let computedResult: string | null = null;
     setState((prev) => {
       if (!prev.operation || !prev.previousInput) return prev;
+
+      let nextState: CalculatorState;
+      let resultValue: string;
+
       try {
-        const result = calculateResult(prev);
-        computedResult = result.currentInput;
-        const entry: HistoryEntry = {
-          id: String(++idCounterRef.current),
-          expression: formatHistoryEntry(
-            prev.previousInput,
-            prev.operation,
-            prev.currentInput,
-            result.currentInput
-          ),
-          result: result.currentInput,
-          timestamp: Date.now(),
-        };
-        addHistoryEntry(entry);
-        return result;
+        nextState = calculateResult(prev);
+        resultValue = nextState.currentInput;
       } catch {
-        computedResult = '错误';
-        return {
+        nextState = {
           currentInput: '错误',
           previousInput: '',
           operation: null,
           shouldResetDisplay: true,
         };
+        resultValue = '错误';
       }
+
+      if (resultValue !== '错误') {
+        const entry: HistoryEntry = {
+          id: String(++idCounterRef.current),
+          expression: formatHistoryEntry(
+            prev.previousInput,
+            prev.operation!,
+            prev.currentInput,
+            resultValue
+          ),
+          result: resultValue,
+          timestamp: Date.now(),
+        };
+        addHistoryEntry(entry);
+      }
+
+      speakResult(resultValue);
+      return nextState;
     });
-    if (computedResult !== null) {
-      speakResult(computedResult);
-    }
   }, [addHistoryEntry]);
 
   const handleClear = useCallback(() => {
@@ -105,6 +112,13 @@ export function useCalculator(): UseCalculatorReturn {
     setState((prev) => ({
       ...prev,
       currentInput: percentage(prev.currentInput),
+    }));
+  }, []);
+
+  const handleBackspace = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      currentInput: backspace(prev.currentInput),
     }));
   }, []);
 
@@ -150,6 +164,7 @@ export function useCalculator(): UseCalculatorReturn {
     handleClear,
     handleToggleSign,
     handlePercent,
+    handleBackspace,
     handleScientific,
     setDisplayValue,
     clearHistory,

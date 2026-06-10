@@ -8,7 +8,12 @@
       "Skill(update-config)",
       "Bash(npm test *)",
       "PowerShell(head *)",
-      "PowerShell(git add *)"
+      "PowerShell(git add *)",
+      "Bash(npx tsc *)",
+      "Bash(npx --version)",
+      "Bash(expo --version)",
+      "Bash(npx expo *)",
+      "Bash(EXPO_NO_DOCTOR=1 npx expo *)"
     ]
   },
   "enabledPlugins": {}

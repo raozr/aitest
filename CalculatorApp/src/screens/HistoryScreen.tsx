@@ -1,13 +1,14 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Alert } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { HistoryEntry } from '../types';
-import { loadHistory, saveHistory, clearHistory as clearStorage } from '../storage/history';
+import { loadHistory, clearHistory as clearStorage } from '../storage/history';
 import HistoryList from '../components/HistoryList';
+import { RootStackParamList } from '../navigation/AppNavigator';
 
 export default function HistoryScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<any>>();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
 
   useFocusEffect(

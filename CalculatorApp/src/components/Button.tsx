@@ -10,7 +10,7 @@ import { colors } from '../constants/theme';
 
 interface ButtonProps {
   label: string;
-  type: 'number' | 'function' | 'operator';
+  type: 'number' | 'function' | 'operator' | 'scientific';
   onPress: () => void;
   span?: 1 | 2;
   size?: number;
@@ -32,13 +32,15 @@ export default function Button({
       ? colors.numKey
       : type === 'function'
       ? colors.funcKey
+      : type === 'scientific'
+      ? colors.sciKey
       : colors.opKey;
 
   const textColor =
     type === 'function' ? colors.funcKeyText : colors.keyText;
 
   const fontSize =
-    type === 'number' ? 28 : type === 'function' ? 24 : 30;
+    type === 'number' ? 28 : type === 'scientific' ? 24 : type === 'function' ? 24 : 30;
 
   return (
     <Pressable

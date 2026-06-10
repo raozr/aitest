@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working on this React Native Expo calculator app.
 
-Mobile version of the Python tkinter calculator (`D:\Ai\cu.py`).
+Mobile version of the Python tkinter calculator (`cu.py` in the parent directory).
 
 ## Commands
 
@@ -21,7 +21,6 @@ src/
 ├── types/index.ts          — TypeScript types (CalculatorState, Operator, etc.)
 ├── constants/theme.ts      — iOS dark theme colors & typography
 ├── utils/calculator.ts     — Pure calculation functions (ported from cu.py)
-├── utils/formatters.ts     — Number formatting, scientific notation
 ├── utils/rates.ts          — Exchange rate API client + fallback rates
 ├── utils/speech.ts         — Chinese TTS speech (expo-speech, zh-CN)
 ├── hooks/useCalculator.ts  — Calculator state machine hook

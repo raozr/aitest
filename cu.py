@@ -602,7 +602,7 @@ class HistoryMode:
 
         # 列表框
         self.history_listbox = tk.Listbox(list_frame, font=("Arial", 13),
-                                          height=20, justify="left",
+                                          height=20,
                                           yscrollcommand=scrollbar.set,
                                           bg="#1C1C1E", fg="#FFFFFF",
                                           selectbackground="#FF9500",

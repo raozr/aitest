@@ -5,7 +5,7 @@ import {
   Pressable,
   Modal,
   StyleSheet,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -22,9 +22,9 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 
 interface BtnDef {
   label: string;
-  type: 'number' | 'function' | 'operator';
+  type: 'number' | 'function' | 'operator' | 'scientific';
   span?: 1 | 2;
-  action?: 'digit' | 'op' | 'equals' | 'clear' | 'toggle' | 'percent';
+  action?: 'digit' | 'op' | 'equals' | 'clear' | 'toggle' | 'percent' | 'power' | 'backspace';
 }
 
 const BASIC_BUTTONS: BtnDef[] = [
@@ -50,22 +50,21 @@ const BASIC_BUTTONS: BtnDef[] = [
 ];
 
 const SCIENTIFIC_BUTTONS: BtnDef[] = [
-  { label: 'sin', type: 'function' },
-  { label: 'cos', type: 'function' },
-  { label: 'tan', type: 'function' },
-  { label: 'ln', type: 'function' },
-  { label: 'log', type: 'function' },
-  { label: 'x²', type: 'function' },
-  { label: 'x³', type: 'function' },
-  { label: 'xʸ', type: 'function' },
-  { label: '√', type: 'function' },
-  { label: '∛', type: 'function' },
-  { label: 'π', type: 'function' },
-  { label: 'e', type: 'function' },
-  { label: '(', type: 'function' },
-  { label: ')', type: 'function' },
-  { label: 'n!', type: 'function' },
-  { label: '1/x', type: 'function' },
+  { label: '⌫', type: 'operator', action: 'backspace' },
+  { label: 'π', type: 'scientific' },
+  { label: 'e', type: 'scientific' },
+  { label: 'n!', type: 'scientific' },
+  { label: 'x²', type: 'scientific' },
+  { label: 'x³', type: 'scientific' },
+  { label: 'xʸ', type: 'operator', action: 'power' },
+  { label: '1/x', type: 'scientific' },
+  { label: '√', type: 'scientific' },
+  { label: '∛', type: 'scientific' },
+  { label: 'log', type: 'scientific' },
+  { label: 'ln', type: 'scientific' },
+  { label: 'sin', type: 'scientific' },
+  { label: 'cos', type: 'scientific' },
+  { label: 'tan', type: 'scientific' },
 ];
 
 const MODE_LABELS: Record<string, string> = {
@@ -97,6 +96,7 @@ export default function CalculatorScreen() {
     handleClear,
     handleToggleSign,
     handlePercent,
+    handleBackspace,
     handleScientific,
     setDisplayValue,
     clearHistory,
@@ -128,7 +128,7 @@ export default function CalculatorScreen() {
     }
   }, [route.params?.restoreValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const screenWidth = Dimensions.get('window').width;
+  const { width: screenWidth } = useWindowDimensions();
   const cols = 4;
   const gap = 8;
   const btnSize = (screenWidth - gap * (cols + 1)) / cols;
@@ -140,6 +140,8 @@ export default function CalculatorScreen() {
     clear: () => handleClear(),
     toggle: () => handleToggleSign(),
     percent: () => { speakOperator('%'); handlePercent(); },
+    power: () => { handleOperation('^'); },
+    backspace: () => { handleBackspace(); },
   };
 
   const onButtonPress = (btn: BtnDef) => {

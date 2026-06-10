@@ -144,6 +144,31 @@ describe('useCalculator', () => {
     });
   });
 
+  describe('handleBackspace', () => {
+    it('removes last digit', () => {
+      const { result } = renderHook(() => useCalculator());
+      act(() => result.current.handleDigit('1'));
+      act(() => result.current.handleDigit('2'));
+      act(() => result.current.handleDigit('3'));
+      expect(result.current.display).toBe('123');
+      act(() => result.current.handleBackspace());
+      expect(result.current.display).toBe('12');
+    });
+
+    it('single digit becomes 0', () => {
+      const { result } = renderHook(() => useCalculator());
+      act(() => result.current.handleDigit('5'));
+      act(() => result.current.handleBackspace());
+      expect(result.current.display).toBe('0');
+    });
+
+    it('0 stays 0', () => {
+      const { result } = renderHook(() => useCalculator());
+      act(() => result.current.handleBackspace());
+      expect(result.current.display).toBe('0');
+    });
+  });
+
   describe('handleScientific', () => {
     it('computes sin(30)', () => {
       const { result } = renderHook(() => useCalculator());

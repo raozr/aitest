@@ -50,5 +50,6 @@ export function convertCurrency(
 ): number {
   const fromRate = rates[from] ?? 1;
   const toRate = rates[to] ?? 1;
-  return (amount / fromRate) * toRate;
+  const result = (amount / fromRate) * toRate;
+  return parseFloat(result.toFixed(4));
 }

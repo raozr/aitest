@@ -10,9 +10,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 | | 桌面版 | 移动版 |
 |---|---|---|
-| **目录** | `cu.py`（单文件，~1130 行） | `CalculatorApp/`（~550 行，18 模块） |
+| **目录** | `cu.py`（单文件，~1130 行） | `CalculatorApp/`（~1700 行，17 模块） |
 | **框架** | Python tkinter（仅标准库） | React Native + Expo SDK 54 |
-| **测试** | 手动 | Jest（63 项） |
+| **测试** | 手动 | Jest（120+ 项，calculator 42 + rates 14 + useCalculator 64） |
 | **构建** | PyInstaller → `dist/计算器.exe` | EAS Build / Gradle |
 
 ---
@@ -118,8 +118,11 @@ React Native + Expo，TypeScript 类型安全，纯函数计算引擎。
 |------|------|
 | `cd CalculatorApp && npm install` | 安装依赖 |
 | `npm start` | 启动 Expo 开发服务器 |
+| `npm run android` | Android 真机/模拟器运行 |
+| `npm run ios` | iOS 真机/模拟器运行 |
 | `npm run web` | 浏览器预览 |
-| `npm test` | 运行全部 Jest 测试（63 项） |
+| `npm test` | 运行全部 Jest 测试（120+ 项） |
+| `npx jest --watch` | 交互式调试单测 |
 | `npx tsc --noEmit` | TypeScript 类型检查 |
 | `npx expo export --platform web` | Web 静态导出 |
 
@@ -151,9 +154,9 @@ CalculatorApp/
 │   └── storage/
 │       └── history.ts             # AsyncStorage 历史持久化
 └── __tests__/
-    ├── calculator.test.ts         # 纯函数测试（30 项）
-    ├── rates.test.ts              # 汇率数据完整性（12 项）
-    └── useCalculator.test.ts      # 状态机测试（18 项）
+    ├── calculator.test.ts         # 纯函数测试（42 条 it/test，含边缘用例）
+    ├── rates.test.ts              # 汇率数据完整性（14 条 it/test）
+    └── useCalculator.test.ts      # 状态机测试（64 条 it/test，含渲染验证）
 ```
 
 ### 移动版关键设计
@@ -194,7 +197,7 @@ CalculatorApp/
 
 ```
 cu.py                     — 桌面版主程序（Python tkinter，~1130 行）
-CalculatorApp/            — 移动版完整项目（React Native + Expo）
+CalculatorApp/            — 移动版完整项目（React Native + Expo，~1700 行）
 CLAUDE.md                 — 本文件
 README.md                 — 项目说明
 spec-ios-ui.md            — iOS 风格 UI 改造规范（已实施）
@@ -203,4 +206,5 @@ spec-mobile-app.md        — 移动版迁移规范
 spec-voice.md             — 语音播报功能规范
 plan-mobile-app.md        — 移动版实施计划
 dist/计算器.exe            — 打包产物（gitignored）
+.specstory/               — 开发日志（gitignored）
 ```

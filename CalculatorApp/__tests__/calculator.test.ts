@@ -6,6 +6,7 @@ import {
   clearAll,
   toggleSign,
   percentage,
+  backspace,
   formatDisplay,
   formatHistoryEntry,
   scientificFunc,
@@ -65,6 +66,16 @@ describe('inputNumber', () => {
     );
     expect(s.currentInput).toBe('9');
     expect(s.shouldResetDisplay).toBe(false);
+  });
+
+  it('rejects input beyond 15 significant digits', () => {
+    let s = createInitialState();
+    for (let i = 0; i < 15; i++) {
+      s = inputNumber(s, '1');
+    }
+    expect(s.currentInput).toBe('111111111111111');
+    const overflow = inputNumber(s, '2');
+    expect(overflow.currentInput).toBe('111111111111111');
   });
 });
 
@@ -241,5 +252,63 @@ describe('scientificFunc', () => {
 
   it('1/x 4 = 0.25', () => {
     expect(scientificFunc('1/x', 4)).toBe(0.25);
+  });
+
+  it('n! negative returns NaN', () => {
+    expect(scientificFunc('n!', -5)).toBeNaN();
+  });
+
+  it('n! 170 returns Infinity', () => {
+    expect(scientificFunc('n!', 171)).toBe(Infinity);
+  });
+
+  it('n! 0 = 1', () => {
+    expect(scientificFunc('n!', 0)).toBe(1);
+  });
+
+  it('n! 170 is finite', () => {
+    expect(scientificFunc('n!', 170)).toBeLessThan(Infinity);
+  });
+});
+
+// --- backspace ---
+describe('backspace', () => {
+  it('removes last digit', () => {
+    expect(backspace('123')).toBe('12');
+  });
+
+  it('single digit becomes 0', () => {
+    expect(backspace('5')).toBe('0');
+  });
+
+  it('0 stays 0', () => {
+    expect(backspace('0')).toBe('0');
+  });
+
+  it('negative two chars becomes 0', () => {
+    expect(backspace('-5')).toBe('0');
+  });
+
+  it('negative number removes last digit', () => {
+    expect(backspace('-123')).toBe('-12');
+  });
+
+  it('decimal removes last digit', () => {
+    expect(backspace('1.5')).toBe('1.');
+  });
+
+  it('错误 becomes 0', () => {
+    expect(backspace('错误')).toBe('0');
+  });
+});
+
+// --- formatDisplay edge cases ---
+describe('formatDisplay edge cases', () => {
+  it('passes through 错误 unchanged', () => {
+    expect(formatDisplay('错误')).toBe('错误');
+  });
+
+  it('long NaN input returns 错误', () => {
+    expect(formatDisplay('abcdefghijklm')).toBe('错误');
   });
 });

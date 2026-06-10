@@ -22,5 +22,3 @@ export interface CurrencyInfo {
 }
 
 export type CalcMode = 'basic' | 'scientific';
-
-export type ButtonType = 'number' | 'function' | 'operator';
