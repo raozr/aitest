@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   Modal,
   StyleSheet,
   useWindowDimensions,
+  ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -14,9 +15,10 @@ import { CalcMode, Operator } from '../types';
 import { colors } from '../constants/theme';
 import { useCalculator } from '../hooks/useCalculator';
 import { loadHistory, saveHistory } from '../storage/history';
+import { loadVoiceEnabled, saveVoiceEnabled } from '../storage/settings';
 import Display from '../components/Display';
 import ModeSwitcher from '../components/ModeSwitcher';
-import { speakDigit, speakOperator, stopSpeech } from '../utils/speech';
+import { speakDigit, speakOperator, speakScientific, stopSpeech } from '../utils/speech';
 import Button from '../components/Button';
 import { RootStackParamList } from '../navigation/AppNavigator';
 
@@ -51,20 +53,23 @@ const BASIC_BUTTONS: BtnDef[] = [
 
 const SCIENTIFIC_BUTTONS: BtnDef[] = [
   { label: '⌫', type: 'operator', action: 'backspace' },
+  { label: 'n!', type: 'scientific' },
   { label: 'π', type: 'scientific' },
   { label: 'e', type: 'scientific' },
-  { label: 'n!', type: 'scientific' },
+  { label: '|x|', type: 'scientific' },
+  { label: '1/x', type: 'scientific' },
   { label: 'x²', type: 'scientific' },
   { label: 'x³', type: 'scientific' },
   { label: 'xʸ', type: 'operator', action: 'power' },
-  { label: '1/x', type: 'scientific' },
   { label: '√', type: 'scientific' },
   { label: '∛', type: 'scientific' },
   { label: 'log', type: 'scientific' },
   { label: 'ln', type: 'scientific' },
+  { label: 'eˣ', type: 'scientific' },
   { label: 'sin', type: 'scientific' },
   { label: 'cos', type: 'scientific' },
   { label: 'tan', type: 'scientific' },
+  { label: '10ˣ', type: 'scientific' },
 ];
 
 const MODE_LABELS: Record<string, string> = {
@@ -85,7 +90,9 @@ export default function CalculatorScreen() {
 
   const [calcMode, setCalcMode] = useState<CalcMode>('basic');
   const [menuVisible, setMenuVisible] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const insets = useSafeAreaInsets();
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
     display,
@@ -101,32 +108,47 @@ export default function CalculatorScreen() {
     setDisplayValue,
     clearHistory,
     loadHistory: loadCalcHistory,
-  } = useCalculator();
+  } = useCalculator(voiceEnabled);
 
-  // Load persisted history on mount
   useEffect(() => {
     loadHistory().then((entries) => {
       loadCalcHistory(entries);
     });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Persist history whenever it changes
   useEffect(() => {
-    saveHistory(history);
+    loadVoiceEnabled().then(setVoiceEnabled);
+  }, []);
+
+  useEffect(() => {
+    saveVoiceEnabled(voiceEnabled);
+  }, [voiceEnabled]);
+
+  useEffect(() => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    saveTimeoutRef.current = setTimeout(() => {
+      saveHistory(history);
+    }, 500);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
   }, [history]);
 
-  // Stop speech when navigating away
   useEffect(() => {
     return () => stopSpeech();
   }, []);
 
-  // Handle restoreValue from History screen
   useEffect(() => {
     if (route.params?.restoreValue) {
       setDisplayValue(route.params.restoreValue);
       navigation.setParams({ restoreValue: undefined });
     }
-  }, [route.params?.restoreValue]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [route.params?.restoreValue]);
 
   const { width: screenWidth } = useWindowDimensions();
   const cols = 4;
@@ -134,23 +156,27 @@ export default function CalculatorScreen() {
   const btnSize = (screenWidth - gap * (cols + 1)) / cols;
 
   const buttonActions: Record<string, (label: string) => void> = {
-    digit: (l) => { if (l) { handleDigit(l); speakDigit(l); } },
-    op: (l) => { if (l && OP_MAP[l]) { handleOperation(OP_MAP[l]); speakOperator(l); } },
-    equals: () => { speakOperator('='); handleEquals(); },
+    digit: (l) => { if (l) { handleDigit(l); if (voiceEnabled) speakDigit(l); } },
+    op: (l) => { if (l && OP_MAP[l]) { handleOperation(OP_MAP[l]); if (voiceEnabled) speakOperator(l); } },
+    equals: () => { if (voiceEnabled) speakOperator('='); handleEquals(); },
     clear: () => handleClear(),
     toggle: () => handleToggleSign(),
-    percent: () => { speakOperator('%'); handlePercent(); },
-    power: () => { handleOperation('^'); },
-    backspace: () => { handleBackspace(); },
+    percent: () => { if (voiceEnabled) speakOperator('%'); handlePercent(); },
+    power: () => { if (voiceEnabled) speakScientific('xʸ'); handleOperation('^'); },
+    backspace: () => { if (voiceEnabled) speakScientific('⌫'); handleBackspace(); },
   };
 
   const onButtonPress = (btn: BtnDef) => {
-    const action = btn.action ? buttonActions[btn.action] : handleScientific;
-    action(btn.label);
+    if (btn.action) {
+      const action = buttonActions[btn.action];
+      action(btn.label);
+    } else {
+      if (voiceEnabled) speakScientific(btn.label);
+      handleScientific(btn.label);
+    }
   };
 
-  const renderGrid = () => {
-    const buttons = calcMode === 'basic' ? BASIC_BUTTONS : SCIENTIFIC_BUTTONS;
+  const buildRows = (buttons: BtnDef[]) => {
     const gridCols = 4;
     const rows: BtnDef[][] = [];
     let row: BtnDef[] = [];
@@ -167,35 +193,57 @@ export default function CalculatorScreen() {
       colCount += span;
     });
     if (row.length > 0) rows.push(row);
+    return rows;
+  };
 
-    return (
-      <View style={styles.grid}>
-        {rows.map((rowBtns, ri) => (
-          <View key={ri} style={styles.gridRow}>
-            {rowBtns.map((btn, ci) => (
-              <View
-                key={`${ri}-${ci}`}
-                style={
-                  btn.span === 2
-                    ? { width: btnSize * 2 + gap, marginRight: gap / 2 }
-                    : ci < rowBtns.length - 1
-                    ? { marginRight: gap }
-                    : undefined
-                }
-              >
-                <Button
-                  label={btn.label}
-                  type={btn.type}
-                  span={btn.span}
-                  size={btnSize}
-                  onPress={() => onButtonPress(btn)}
-                />
-              </View>
-            ))}
+  const renderScientificButtons = () => {
+    const rows = buildRows(SCIENTIFIC_BUTTONS);
+    return rows.map((rowBtns, ri) => (
+      <View key={`sci-${ri}`} style={styles.gridRow}>
+        {rowBtns.map((btn, ci) => (
+          <View
+            key={`sci-${ri}-${ci}`}
+            style={ci < rowBtns.length - 1 ? { marginRight: gap } : undefined}
+          >
+            <Button
+              label={btn.label}
+              type={btn.type}
+              width={btnSize}
+              height={btnSize * 0.85}
+              onPress={() => onButtonPress(btn)}
+            />
           </View>
         ))}
       </View>
-    );
+    ));
+  };
+
+  const renderBasicButtons = () => {
+    const rows = buildRows(BASIC_BUTTONS);
+    return rows.map((rowBtns, ri) => (
+      <View key={ri} style={styles.gridRow}>
+        {rowBtns.map((btn, ci) => (
+          <View
+            key={`${ri}-${ci}`}
+            style={
+              btn.span === 2
+                ? { width: btnSize * 2 + gap, marginRight: gap / 2 }
+                : ci < rowBtns.length - 1
+                ? { marginRight: gap }
+                : undefined
+            }
+          >
+            <Button
+              label={btn.label}
+              type={btn.type}
+              span={btn.span}
+              size={btnSize}
+              onPress={() => onButtonPress(btn)}
+            />
+          </View>
+        ))}
+      </View>
+    ));
   };
 
   return (
@@ -211,6 +259,13 @@ export default function CalculatorScreen() {
         <Text style={styles.toolbarTitle}>计算器</Text>
         <Pressable
           style={styles.toolbarBtn}
+          onPress={() => setVoiceEnabled(!voiceEnabled)}
+          hitSlop={8}
+        >
+          <Text style={styles.toolbarBtnText}>{voiceEnabled ? '🔊' : '🔇'}</Text>
+        </Pressable>
+        <Pressable
+          style={styles.toolbarBtn}
           onPress={() => setMenuVisible(true)}
           hitSlop={8}
         >
@@ -219,7 +274,17 @@ export default function CalculatorScreen() {
       </View>
       <Display value={display} />
       <ModeSwitcher mode={calcMode} onModeChange={setCalcMode} />
-      {renderGrid()}
+      {calcMode === 'scientific' ? (
+        <ScrollView style={styles.gridScroll} contentContainerStyle={styles.gridScrollContent}>
+          {renderScientificButtons()}
+          <View style={styles.sectionDivider} />
+          {renderBasicButtons()}
+        </ScrollView>
+      ) : (
+        <View style={styles.grid}>
+          {renderBasicButtons()}
+        </View>
+      )}
 
       {/* Mode selector modal */}
       <Modal
@@ -293,9 +358,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   grid: {
-    flex: 3,
+    flex: 1,
     justifyContent: 'center',
     paddingHorizontal: 8,
+  },
+  gridScroll: {
+    flex: 1,
+  },
+  gridScrollContent: {
+    paddingHorizontal: 8,
+    paddingVertical: 12,
+  },
+  sectionDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.separator,
+    marginVertical: 12,
+    marginHorizontal: 8,
   },
   gridRow: {
     flexDirection: 'row',

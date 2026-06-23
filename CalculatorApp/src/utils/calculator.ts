@@ -127,7 +127,6 @@ export function formatHistoryEntry(
   return `${a} ${op} ${b} = ${result}`;
 }
 
-// Scientific functions
 export function scientificFunc(func: string, value: number): number {
   switch (func) {
     case 'sin':
@@ -156,6 +155,12 @@ export function scientificFunc(func: string, value: number): number {
       return roundResult(factorial(Math.floor(value)));
     case '1/x':
       return roundResult(1 / value);
+    case '|x|':
+      return roundResult(Math.abs(value));
+    case 'eˣ':
+      return roundResult(Math.exp(value));
+    case '10ˣ':
+      return roundResult(Math.pow(10, value));
     default:
       return value;
   }

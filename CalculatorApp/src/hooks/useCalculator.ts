@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { CalculatorState, Operator, HistoryEntry } from '../types';
 import { speakResult } from '../utils/speech';
 import {
@@ -32,10 +32,14 @@ interface UseCalculatorReturn {
   loadHistory: (entries: HistoryEntry[]) => void;
 }
 
-export function useCalculator(): UseCalculatorReturn {
+export function useCalculator(voiceEnabled: boolean = true): UseCalculatorReturn {
   const [state, setState] = useState<CalculatorState>(createInitialState);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const idCounterRef = useRef(0);
+  const voiceEnabledRef = useRef(voiceEnabled);
+  voiceEnabledRef.current = voiceEnabled;
+  const pendingHistoryRef = useRef<HistoryEntry | null>(null);
+  const pendingResultRef = useRef<string | null>(null);
 
   const addHistoryEntry = useCallback(
     (entry: HistoryEntry) => {
@@ -48,6 +52,19 @@ export function useCalculator(): UseCalculatorReturn {
   );
 
   const display = formatDisplay(state.currentInput);
+
+  useEffect(() => {
+    if (pendingHistoryRef.current) {
+      addHistoryEntry(pendingHistoryRef.current);
+      pendingHistoryRef.current = null;
+    }
+    if (pendingResultRef.current !== null) {
+      if (voiceEnabledRef.current) {
+        speakResult(pendingResultRef.current);
+      }
+      pendingResultRef.current = null;
+    }
+  });
 
   const handleDigit = useCallback((digit: string) => {
     setState((prev) => inputNumber(prev, digit));
@@ -78,8 +95,8 @@ export function useCalculator(): UseCalculatorReturn {
       }
 
       if (resultValue !== '错误') {
-        const entry: HistoryEntry = {
-          id: String(++idCounterRef.current),
+        pendingHistoryRef.current = {
+          id: String(idCounterRef.current++),
           expression: formatHistoryEntry(
             prev.previousInput,
             prev.operation!,
@@ -89,13 +106,12 @@ export function useCalculator(): UseCalculatorReturn {
           result: resultValue,
           timestamp: Date.now(),
         };
-        addHistoryEntry(entry);
       }
 
-      speakResult(resultValue);
+      pendingResultRef.current = resultValue;
       return nextState;
     });
-  }, [addHistoryEntry]);
+  }, []);
 
   const handleClear = useCallback(() => {
     setState(clearAll());
@@ -126,6 +142,15 @@ export function useCalculator(): UseCalculatorReturn {
     setState((prev) => {
       const value = parseFloat(prev.currentInput);
       const result = scientificFunc(func, value);
+      if (!isFinite(result)) {
+        return {
+          ...prev,
+          currentInput: '错误',
+          previousInput: '',
+          operation: null,
+          shouldResetDisplay: true,
+        };
+      }
       const resultStr = String(result);
       return {
         ...prev,
@@ -150,7 +175,7 @@ export function useCalculator(): UseCalculatorReturn {
   const loadHistory = useCallback((entries: HistoryEntry[]) => {
     setHistory(entries);
     if (entries.length > 0) {
-      idCounterRef.current = Math.max(...entries.map((e) => parseInt(e.id, 10)));
+      idCounterRef.current = Math.max(...entries.map((e) => parseInt(e.id, 10))) + 1;
     }
   }, []);
 

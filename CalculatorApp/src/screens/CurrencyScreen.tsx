@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { colors } from '../constants/theme';
 import { useExchangeRates } from '../hooks/useExchangeRates';
-import { convertCurrency, CURRENCY_NAMES, CURRENCY_COLORS } from '../utils/rates';
+import { convertCurrency, CURRENCY_NAMES, CURRENCY_COLORS, SUPPORTED_CURRENCIES } from '../utils/rates';
 import CurrencySelector from '../components/CurrencySelector';
 
 export default function CurrencyScreen() {
@@ -33,7 +33,7 @@ export default function CurrencyScreen() {
 
   const ratesList = useMemo(() => {
     return Object.entries(rates)
-      .filter(([code]) => code !== 'USD')
+      .filter(([code]) => code !== 'USD' && SUPPORTED_CURRENCIES.includes(code))
       .map(([code, rate]) => ({ code, rate }))
       .sort((a, b) => a.code.localeCompare(b.code));
   }, [rates]);

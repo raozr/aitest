@@ -20,6 +20,8 @@ export function useExchangeRates(): UseExchangeRatesReturn {
   const load = useCallback(async (force = false) => {
     const now = Date.now();
     if (!force && now - lastFetch.current < CACHE_DURATION && Object.keys(ratesRef.current).length > 0) {
+      setRates(ratesRef.current);
+      setIsLoading(false);
       return;
     }
 

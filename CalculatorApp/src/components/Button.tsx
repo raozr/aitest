@@ -14,6 +14,8 @@ interface ButtonProps {
   onPress: () => void;
   span?: 1 | 2;
   size?: number;
+  width?: number;
+  height?: number;
 }
 
 export default function Button({
@@ -22,10 +24,12 @@ export default function Button({
   onPress,
   span = 1,
   size = 80,
+  width,
+  height,
 }: ButtonProps) {
   const gap = 8;
-  const btnWidth = size;
-  const btnHeight = size;
+  const btnWidth = width ?? size;
+  const btnHeight = height ?? size;
 
   const bgColor =
     type === 'number'
@@ -40,7 +44,7 @@ export default function Button({
     type === 'function' ? colors.funcKeyText : colors.keyText;
 
   const fontSize =
-    type === 'number' ? 28 : type === 'scientific' ? 24 : type === 'function' ? 24 : 30;
+    type === 'number' ? 28 : type === 'scientific' ? 22 : type === 'function' ? 24 : 30;
 
   return (
     <Pressable
@@ -51,7 +55,7 @@ export default function Button({
           backgroundColor: bgColor,
           width: span === 2 ? btnWidth * 2 + gap : btnWidth,
           height: btnHeight,
-          borderRadius: btnWidth / 4,
+          borderRadius: Math.min(btnWidth, btnHeight) / 4,
           opacity: pressed ? 0.6 : 1,
         },
       ]}

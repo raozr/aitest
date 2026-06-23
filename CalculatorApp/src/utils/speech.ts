@@ -23,6 +23,29 @@ const OPERATOR_TO_SPEECH: Record<string, string> = {
   '%': '百分之',
 };
 
+const SCIENTIFIC_TO_SPEECH: Record<string, string> = {
+  '⌫': '退格',
+  '(': '左括号',
+  ')': '右括号',
+  'n!': '阶乘',
+  'π': '派',
+  'e': '自然常数',
+  '|x|': '绝对值',
+  '1/x': '倒数',
+  'x²': '平方',
+  'x³': '立方',
+  'xʸ': '幂',
+  '√': '平方根',
+  '∛': '立方根',
+  'log': '常用对数',
+  'ln': '自然对数',
+  'eˣ': 'e 的指数',
+  'sin': '正弦',
+  'cos': '余弦',
+  'tan': '正切',
+  '10ˣ': '10 的指数',
+};
+
 const SPEECH_OPTIONS: Speech.SpeechOptions = {
   language: 'zh-CN',
   rate: 0.75,
@@ -40,8 +63,18 @@ export function speakOperator(op: string): void {
   Speech.speak(text, SPEECH_OPTIONS);
 }
 
+export function speakScientific(func: string): void {
+  const text = SCIENTIFIC_TO_SPEECH[func];
+  if (!text) return;
+  Speech.speak(text, SPEECH_OPTIONS);
+}
+
 export function speakResult(value: string): void {
-  Speech.speak(value, SPEECH_OPTIONS);
+  const text = value
+    .split('')
+    .map((ch) => (ch === '-' ? '负' : DIGIT_TO_CHINESE[ch] ?? ch))
+    .join('');
+  Speech.speak(text, SPEECH_OPTIONS);
 }
 
 export function stopSpeech(): void {

@@ -22,8 +22,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-end',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    flex: 1,
+    height: 100,
   },
   text: {
     ...typography.display,
