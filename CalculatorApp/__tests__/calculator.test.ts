@@ -9,7 +9,6 @@ import {
   backspace,
   formatDisplay,
   formatHistoryEntry,
-  scientificFunc,
 } from '../src/utils/calculator';
 
 // --- createInitialState ---
@@ -97,6 +96,17 @@ describe('inputOperation', () => {
     expect(s.currentInput).toBe('8');
     expect(s.previousInput).toBe('8');
     expect(s.operation).toBe('-');
+  });
+
+  it('returns error state instead of throwing on chained divide by zero', () => {
+    let s = createInitialState();
+    s = inputNumber(s, '5');
+    s = inputOperation(s, '÷');
+    s = inputNumber(s, '0');
+    const result = inputOperation(s, '+');
+    expect(result.currentInput).toBe('错误');
+    expect(result.operation).toBeNull();
+    expect(result.shouldResetDisplay).toBe(true);
   });
 });
 
@@ -192,6 +202,10 @@ describe('toggleSign', () => {
   it('0 → 0', () => {
     expect(toggleSign('0')).toBe('0');
   });
+
+  it('错误 stays 错误', () => {
+    expect(toggleSign('错误')).toBe('错误');
+  });
 });
 
 // --- percentage ---
@@ -202,6 +216,10 @@ describe('percentage', () => {
 
   it('100 → 1', () => {
     expect(percentage('100')).toBe('1');
+  });
+
+  it('错误 stays 错误', () => {
+    expect(percentage('错误')).toBe('错误');
   });
 });
 
@@ -225,49 +243,6 @@ describe('formatDisplay', () => {
 describe('formatHistoryEntry', () => {
   it('formats correctly', () => {
     expect(formatHistoryEntry('5', '+', '3', '8')).toBe('5 + 3 = 8');
-  });
-});
-
-// --- scientificFunc ---
-describe('scientificFunc', () => {
-  it('sin(30) ≈ 0.5', () => {
-    expect(scientificFunc('sin', 30)).toBeCloseTo(0.5, 1);
-  });
-
-  it('cos(60) ≈ 0.5', () => {
-    expect(scientificFunc('cos', 60)).toBeCloseTo(0.5, 1);
-  });
-
-  it('π', () => {
-    expect(scientificFunc('π', 0)).toBeCloseTo(Math.PI);
-  });
-
-  it('e', () => {
-    expect(scientificFunc('e', 0)).toBeCloseTo(Math.E);
-  });
-
-  it('n! 5 = 120', () => {
-    expect(scientificFunc('n!', 5)).toBe(120);
-  });
-
-  it('1/x 4 = 0.25', () => {
-    expect(scientificFunc('1/x', 4)).toBe(0.25);
-  });
-
-  it('n! negative returns NaN', () => {
-    expect(scientificFunc('n!', -5)).toBeNaN();
-  });
-
-  it('n! 170 returns Infinity', () => {
-    expect(scientificFunc('n!', 171)).toBe(Infinity);
-  });
-
-  it('n! 0 = 1', () => {
-    expect(scientificFunc('n!', 0)).toBe(1);
-  });
-
-  it('n! 170 is finite', () => {
-    expect(scientificFunc('n!', 170)).toBeLessThan(Infinity);
   });
 });
 

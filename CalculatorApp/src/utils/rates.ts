@@ -34,12 +34,22 @@ export const CURRENCY_COLORS: Record<string, string> = {
 
 export const SUPPORTED_CURRENCIES = Object.keys(FALLBACK_RATES);
 
+const FETCH_TIMEOUT = 10 * 1000;
+
 export async function fetchRates(): Promise<RatesMap> {
-  const res = await fetch('https://open.er-api.com/v6/latest/USD');
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
-  if (!data?.rates) throw new Error('无效的响应格式');
-  return data.rates;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+  try {
+    const res = await fetch('https://open.er-api.com/v6/latest/USD', {
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (!data?.rates) throw new Error('无效的响应格式');
+    return data.rates;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export function convertCurrency(

@@ -15,6 +15,15 @@ interface HistoryListProps {
   onClearAll: () => void;
 }
 
+function formatTimestamp(ts: number): string {
+  const d = new Date(ts);
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  if (d.toDateString() === now.toDateString()) return time;
+  return `${d.getMonth() + 1}-${pad(d.getDate())} ${time}`;
+}
+
 export default function HistoryList({
   entries,
   onUseEntry,
@@ -42,7 +51,10 @@ export default function HistoryList({
             style={styles.item}
             onPress={() => onUseEntry(item)}
           >
-            <Text style={styles.expression}>{item.expression}</Text>
+            <View style={styles.itemRow}>
+              <Text style={styles.expression}>{item.expression}</Text>
+              <Text style={styles.time}>{formatTimestamp(item.timestamp)}</Text>
+            </View>
             <Text style={styles.result}>{item.result}</Text>
           </Pressable>
         )}
@@ -91,6 +103,17 @@ const styles = StyleSheet.create({
   expression: {
     color: colors.secondaryText,
     fontSize: 14,
+    flex: 1,
+    marginRight: 12,
+  },
+  itemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  time: {
+    color: colors.tertiaryText,
+    fontSize: 12,
   },
   result: {
     color: colors.displayText,

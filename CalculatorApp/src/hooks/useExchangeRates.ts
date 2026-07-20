@@ -1,7 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { fetchRates, FALLBACK_RATES, RatesMap } from '../utils/rates';
+import { loadCachedRates, saveCachedRates } from '../storage/rates';
 
 const CACHE_DURATION = 5 * 60 * 1000;
+
+// Module-level cache shared across mounts (e.g. re-entering the screen)
+let memoryCache: { rates: RatesMap; timestamp: number } | null = null;
 
 interface UseExchangeRatesReturn {
   rates: RatesMap;
@@ -11,16 +15,17 @@ interface UseExchangeRatesReturn {
 }
 
 export function useExchangeRates(): UseExchangeRatesReturn {
-  const [rates, setRates] = useState<RatesMap>({});
-  const [isLoading, setIsLoading] = useState(true);
+  const [rates, setRates] = useState<RatesMap>(memoryCache?.rates ?? {});
+  const [isLoading, setIsLoading] = useState(!memoryCache);
   const [error, setError] = useState<string | null>(null);
-  const lastFetch = useRef(0);
-  const ratesRef = useRef<RatesMap>({});
 
   const load = useCallback(async (force = false) => {
-    const now = Date.now();
-    if (!force && now - lastFetch.current < CACHE_DURATION && Object.keys(ratesRef.current).length > 0) {
-      setRates(ratesRef.current);
+    if (
+      !force &&
+      memoryCache &&
+      Date.now() - memoryCache.timestamp < CACHE_DURATION
+    ) {
+      setRates(memoryCache.rates);
       setIsLoading(false);
       return;
     }
@@ -29,13 +34,19 @@ export function useExchangeRates(): UseExchangeRatesReturn {
     setError(null);
     try {
       const data = await fetchRates();
+      memoryCache = { rates: data, timestamp: Date.now() };
       setRates(data);
-      ratesRef.current = data;
-      lastFetch.current = now;
+      saveCachedRates(data);
     } catch {
-      setRates(FALLBACK_RATES);
-      ratesRef.current = FALLBACK_RATES;
-      setError('获取汇率失败，使用预设汇率');
+      const cached = memoryCache ?? (await loadCachedRates());
+      if (cached) {
+        memoryCache = cached;
+        setRates(cached.rates);
+        setError('获取汇率失败，使用上次缓存汇率');
+      } else {
+        setRates(FALLBACK_RATES);
+        setError('获取汇率失败，使用预设汇率');
+      }
     } finally {
       setIsLoading(false);
     }

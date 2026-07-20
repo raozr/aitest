@@ -5,6 +5,8 @@ export interface CalculatorState {
   previousInput: string;
   operation: Operator | null;
   shouldResetDisplay: boolean;
+  lastOperation?: Operator | null;
+  lastOperand?: string;
 }
 
 export interface HistoryEntry {

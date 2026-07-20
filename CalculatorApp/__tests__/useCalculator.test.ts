@@ -169,20 +169,107 @@ describe('useCalculator', () => {
     });
   });
 
-  describe('handleScientific', () => {
+  describe('handleScientific (expression mode)', () => {
     it('computes sin(30)', () => {
-      const { result } = renderHook(() => useCalculator());
+      const { result } = renderHook(() => useCalculator(true, 'scientific'));
       act(() => result.current.handleDigit('3'));
       act(() => result.current.handleDigit('0'));
       act(() => result.current.handleScientific('sin'));
+      expect(result.current.display).toBe('sin(30)');
+      act(() => result.current.handleEquals());
       expect(result.current.display).toBe('0.5');
     });
 
     it('computes factorial 5', () => {
-      const { result } = renderHook(() => useCalculator());
+      const { result } = renderHook(() => useCalculator(true, 'scientific'));
       act(() => result.current.handleDigit('5'));
       act(() => result.current.handleScientific('n!'));
+      act(() => result.current.handleEquals());
       expect(result.current.display).toBe('120');
+    });
+
+    it('respects operator precedence: 2+3×4 = 14', () => {
+      const { result } = renderHook(() => useCalculator(true, 'scientific'));
+      act(() => result.current.handleDigit('2'));
+      act(() => result.current.handleOperation('+'));
+      act(() => result.current.handleDigit('3'));
+      act(() => result.current.handleOperation('×'));
+      act(() => result.current.handleDigit('4'));
+      act(() => result.current.handleEquals());
+      expect(result.current.display).toBe('14');
+    });
+
+    it('supports parentheses: (2+3)×4 = 20', () => {
+      const { result } = renderHook(() => useCalculator(true, 'scientific'));
+      act(() => result.current.handleParen('('));
+      act(() => result.current.handleDigit('2'));
+      act(() => result.current.handleOperation('+'));
+      act(() => result.current.handleDigit('3'));
+      act(() => result.current.handleParen(')'));
+      act(() => result.current.handleOperation('×'));
+      act(() => result.current.handleDigit('4'));
+      act(() => result.current.handleEquals());
+      expect(result.current.display).toBe('20');
+    });
+
+    it('adds history entry with full expression', () => {
+      const { result } = renderHook(() => useCalculator(true, 'scientific'));
+      act(() => result.current.handleDigit('5'));
+      act(() => result.current.handleScientific('n!'));
+      act(() => result.current.handleEquals());
+      expect(result.current.history).toHaveLength(1);
+      expect(result.current.history[0].expression).toBe('5! = 120');
+      expect(result.current.history[0].result).toBe('120');
+    });
+
+    it('shows live preview while typing', () => {
+      const { result } = renderHook(() => useCalculator(true, 'scientific'));
+      act(() => result.current.handleDigit('2'));
+      act(() => result.current.handleOperation('+'));
+      act(() => result.current.handleDigit('3'));
+      expect(result.current.expressionPreview).toBe('= 5');
+    });
+
+    it('backspace trims a whole function token', () => {
+      const { result } = renderHook(() => useCalculator(true, 'scientific'));
+      act(() => result.current.handleDigit('3'));
+      act(() => result.current.handleScientific('sin'));
+      expect(result.current.display).toBe('sin(3)');
+      act(() => result.current.handleBackspace());
+      expect(result.current.display).toBe('sin(3');
+    });
+
+    it('is a no-op in basic mode', () => {
+      const { result } = renderHook(() => useCalculator());
+      act(() => result.current.handleDigit('5'));
+      act(() => result.current.handleScientific('sin'));
+      expect(result.current.display).toBe('5');
+    });
+  });
+
+  describe('repeated equals', () => {
+    it('repeats the last operation', () => {
+      const { result } = renderHook(() => useCalculator());
+      act(() => result.current.handleDigit('3'));
+      act(() => result.current.handleOperation('+'));
+      act(() => result.current.handleDigit('3'));
+      act(() => result.current.handleEquals());
+      expect(result.current.display).toBe('6');
+      act(() => result.current.handleEquals());
+      expect(result.current.display).toBe('9');
+      act(() => result.current.handleEquals());
+      expect(result.current.display).toBe('12');
+    });
+
+    it('adds a history entry for each repeat', () => {
+      const { result } = renderHook(() => useCalculator());
+      act(() => result.current.handleDigit('3'));
+      act(() => result.current.handleOperation('+'));
+      act(() => result.current.handleDigit('3'));
+      act(() => result.current.handleEquals());
+      act(() => result.current.handleEquals());
+      expect(result.current.history).toHaveLength(2);
+      expect(result.current.history[1].expression).toBe('6 + 3 = 9');
     });
   });
 

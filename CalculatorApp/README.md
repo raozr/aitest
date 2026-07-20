@@ -1,66 +1,83 @@
 # 🧮 计算器应用
 
-一款功能强大、界面精美的 React Native 计算器应用，支持基础计算和科学计算两种模式。
+一款功能强大、界面精美的 React Native 计算器应用，支持基础计算、科学计算、汇率转换和单位换算。
 
 ![Expo SDK](https://img.shields.io/badge/Expo%20SDK-55-blue)
 ![React Native](https://img.shields.io/badge/React%20Native-0.83.9-green)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Strict%20Mode-blue)
-![Tests](https://img.shields.io/badge/Tests-113%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-163%20passed-brightgreen)
 
 ## ✨ 主要特性
 
-### 🎯 双模式支持
+### 🎯 双模式计算器
 
-- **基础模式**：19 个按钮，支持加减乘除、百分比、正负号等常用功能
-- **科学模式**：20 个科学函数按钮 + 基础键盘，支持高级数学运算
+- **基础模式**：经典 iOS 风格，支持加减乘除、百分比、正负号、连续运算
+- **科学模式**：表达式输入模式，支持括号、运算符优先级、实时结果预览
+- **横屏自动切换**：旋转屏幕自动进入科学模式（iOS 经典交互）
 
-### 🔬 科学计算功能
+### 🔬 科学计算（表达式引擎）
 
-完整的科学计算模式，包含 20 个科学函数按钮（5 行 × 4 列）：
+完整的表达式解析引擎（词法分析 → Shunting-yard 中缀转后缀 → 后缀求值）：
+
+- **括号与优先级**：`(2+3)×4 = 20`，`2+3×4 = 14`，右结合幂运算 `2^3^2 = 512`
+- **一元负号**：`-5+3`、`5×-3`、`2^-3`、`-(2+3)`
+- **隐式乘法**：`2π`、`2(3+4)`、`(2+1)(3+1)`
+- **实时预览**：输入过程中小字实时显示计算结果
+- **后缀运算**：`5!`（阶乘）、`50%`（百分号）
+
+科学按钮（5 行 × 4 列）：
 
 ```
-行1:  ⌫ (退格)  ( (左括号)  ) (右括号)  n! (阶乘)
-行2:  π (圆周率) e (自然常数) |x| (绝对值) 1/x (倒数)
-行3:  x² (平方)  x³ (立方)  xʸ (幂)  √ (平方根)
-行4:  ∛ (立方根) log (常用对数) ln (自然对数) eˣ (自然指数)
-行5:  sin (正弦) cos (余弦) tan (正切) 10ˣ (10的x次方)
+行1:  ⌫      (      )      n!
+行2:  π      e      |x|    1/x
+行3:  x²     x³     xʸ     √
+行4:  ∛      log    ln     eˣ
+行5:  sin    cos    tan    10ˣ
 ```
 
-**核心能力：**
-- 支持括号表达式和复杂运算
-- 完整的表达式解析引擎（词法分析 → 中缀转后缀 → 后缀求值）
-- 运算符优先级正确处理
-- 阶乘安全保护（>170 返回 Infinity）
+- 函数按钮自动包裹当前操作数：输入 `30` 按 `sin` → `sin(30)`
+- **DEG/RAD 角度切换**（工具栏按钮，影响三角函数）
+- 退格键智能删除整个函数 token（如 `sin(`）
 
 ### 🔊 中文语音播报
 
-- 所有按钮操作都有中文语音反馈
-- 计算结果自动播报
-- 可通过工具栏按钮（🔊/🔇）控制开关
-- 科学函数按钮播报专业术语（如"正弦"、"平方根"等）
+- 所有按钮操作均有中文语音反馈，计算结果自动播报
+- 科学函数播报专业术语（"正弦"、"平方根"等）
+- 工具栏 🔊/🔇 开关，设置持久化保存
+
+### 👆 便捷手势
+
+- **滑动退格**：在显示区域横向滑动删除最后一位（iOS 风格）
+- **长按复制**：长按显示区域将结果复制到剪贴板
+- **重复等号**：连按 `=` 重复上次运算（`3+3=` → 6，再按 → 9）
 
 ### 📋 历史记录
 
-- 自动保存所有计算记录
-- 持久化存储（AsyncStorage）
-- 支持查看和清除历史
-- 500ms 防抖优化，减少写入频率
+- 自动保存计算记录（含完整表达式和时间戳），上限 50 条
+- AsyncStorage 持久化 + 500ms 防抖写入
+- 点击历史条目恢复结果到计算器
 
 ### 💱 汇率转换
 
-- 实时获取最新汇率数据
-- 5 分钟智能缓存机制
-- 支持多种货币转换
-- 精度控制（4 位小数）
+- 实时汇率（10 秒超时保护），5 分钟模块级缓存
+- 离线降级：网络失败时依次使用本地缓存 / 预设汇率
+- 支持 7 种货币，4 位小数精度
+
+### 📏 单位换算
+
+- **长度**：米/千米/厘米/毫米/英里/英尺/英寸
+- **重量**：千克/克/毫克/磅/盎司
+- **温度**：摄氏度/华氏度/开尔文（专用换算公式）
 
 ## 🛠️ 技术栈
 
 - **框架**: React Native 0.83.9 + Expo SDK 55
 - **语言**: TypeScript 5.9.2（严格模式）
-- **状态管理**: React Hooks（useState, useEffect, useCallback, useRef）
+- **状态管理**: React Hooks
 - **导航**: React Navigation 7.x（Native Stack）
-- **存储**: AsyncStorage
+- **存储**: AsyncStorage（历史 / 语音设置 / 汇率缓存）
 - **语音**: expo-speech
+- **剪贴板**: expo-clipboard
 - **测试**: Jest 29.7.0 + React Native Testing Library
 
 ## 📁 项目结构
@@ -69,220 +86,139 @@
 CalculatorApp/
 ├── src/
 │   ├── components/          # UI 组件
-│   │   ├── Button.tsx       # 计算器按钮（支持 4 种类型）
-│   │   ├── Display.tsx      # 数字显示屏（固定高度 100px）
+│   │   ├── Button.tsx       # 计算器按钮（含无障碍标签）
+│   │   ├── Display.tsx      # 显示屏（结果 + 表达式预览行）
 │   │   ├── ModeSwitcher.tsx # 模式切换器
-│   │   └── ErrorBoundary.tsx # 错误边界组件
+│   │   ├── HistoryList.tsx  # 历史列表（含时间显示）
+│   │   ├── CurrencySelector.tsx # 货币选择器
+│   │   └── ErrorBoundary.tsx # 错误边界
 │   ├── screens/             # 页面
 │   │   ├── CalculatorScreen.tsx # 计算器主页面
-│   │   ├── HistoryScreen.tsx    # 历史记录页面
-│   │   └── CurrencyScreen.tsx   # 汇率转换页面
-│   ├── hooks/               # 自定义 Hooks
-│   │   ├── useCalculator.ts     # 计算器逻辑（含副作用管理）
-│   │   └── useExchangeRates.ts  # 汇率数据管理
-│   ├── utils/               # 工具函数
-│   │   ├── calculator.ts        # 计算逻辑（含科学函数）
+│   │   ├── HistoryScreen.tsx    # 历史记录
+│   │   ├── CurrencyScreen.tsx   # 汇率转换
+│   │   └── UnitScreen.tsx       # 单位换算
+│   ├── hooks/
+│   │   ├── useCalculator.ts     # 双模式计算逻辑
+│   │   └── useExchangeRates.ts  # 汇率数据（缓存/超时/降级）
+│   ├── utils/
+│   │   ├── calculator.ts        # 基础计算逻辑
 │   │   ├── expressionParser.ts  # 表达式解析引擎
 │   │   ├── speech.ts            # 语音播报
-│   │   └── rates.ts             # 汇率转换
-│   ├── storage/             # 数据存储
-│   │   └── history.ts           # 历史记录持久化
-│   ├── navigation/          # 导航配置
-│   │   └── AppNavigator.tsx     # 应用导航器
-│   ├── types/               # TypeScript 类型定义
-│   │   └── index.ts
-│   └── constants/           # 常量定义
-│       └── theme.ts             # 主题颜色和样式
-├── __tests__/               # 测试文件
-│   ├── calculator.test.ts       # 计算器逻辑测试
-│   ├── useCalculator.test.ts    # Hook 测试
-│   ├── expressionParser.test.ts # 表达式解析器测试
-│   └── rates.test.ts            # 汇率转换测试
-├── app.json                 # Expo 配置
-├── package.json             # 依赖管理
-└── tsconfig.json            # TypeScript 配置
+│   │   ├── rates.ts             # 汇率转换
+│   │   └── units.ts             # 单位换算
+│   ├── storage/
+│   │   ├── history.ts           # 历史持久化
+│   │   ├── settings.ts          # 语音开关持久化
+│   │   └── rates.ts             # 汇率离线缓存
+│   ├── navigation/AppNavigator.tsx
+│   ├── types/index.ts
+│   └── constants/theme.ts
+├── __tests__/               # 163 个测试用例
+│   ├── calculator.test.ts
+│   ├── useCalculator.test.ts
+│   ├── expressionParser.test.ts
+│   ├── rates.test.ts
+│   └── units.test.ts
+├── app.json
+├── package.json
+└── tsconfig.json
 ```
 
 ## 🚀 快速开始
 
-### 环境要求
-
-- Node.js >= 20.19.x
-- npm 或 yarn
-- Expo CLI
-
-### 安装运行
-
 ```bash
-# 克隆项目
 git clone https://github.com/raozhengrong/CalculatorApp.git
 cd CalculatorApp
-
-# 安装依赖
 npm install
-
-# 启动开发服务器
-npm start
-
-# 在 iOS 模拟器运行
-npm run ios
-
-# 在 Android 模拟器运行
-npm run android
+npm start        # 启动开发服务器
+npm run ios      # iOS 模拟器
+npm run android  # Android 模拟器
 ```
+
+环境要求：Node.js >= 20.19.x
 
 ## 🧪 测试
 
 ```bash
-# 运行所有测试
-npm test
-
-# 运行测试并生成覆盖率报告
-npm test -- --coverage
-
-# 运行特定测试文件
-npm test __tests__/calculator.test.ts
+npm test                          # 运行所有测试
+npm test -- --coverage            # 覆盖率报告
+npm test __tests__/calculator.test.ts  # 指定测试文件
 ```
 
 **测试覆盖：**
-- ✅ 113 个测试用例全部通过
-- ✅ 覆盖计算器逻辑、Hook、表达式解析、汇率转换
+- ✅ 163 个测试用例全部通过
+- ✅ 覆盖基础计算、Hook 双模式、表达式解析器、汇率、单位换算
 - ✅ TypeScript 严格模式零错误
-
-## 🎨 UI/UX 设计
-
-### 布局架构
-
-```
-┌─────────────────────────┐
-│ Display (固定高度 100px)  │
-├─────────────────────────┤
-│ [基础/科学] 模式切换栏    │
-├─────────────────────────┤
-│                         │
-│    按钮区域              │
-│   （支持滚动）           │
-│                         │
-└─────────────────────────┘
-```
-
-### 颜色主题
-
-- **基础按钮**: `#333333`（深灰色）
-- **功能按钮**: `#A5A5A5`（浅灰色）
-- **科学按钮**: `#3A3A3C`（中深灰色）
-- **运算符按钮**: `#FF9500`（橙色高亮）
-
-### 响应式设计
-
-- 使用 `useWindowDimensions` 动态计算按钮尺寸
-- 支持屏幕旋转和不同设备尺寸
-- 科学模式使用 ScrollView 确保内容可访问
 
 ## 🔧 核心实现
 
-### 1. 副作用管理
+### 1. 双模式状态管理
 
-使用 ref + useEffect 模式彻底消除 React 并发模式下的副作用重复问题：
+基础模式使用经典即时求值状态机；科学模式使用表达式字符串模型，共享同一 Hook：
 
 ```typescript
-const pendingHistoryRef = useRef<HistoryEntry | null>(null);
-const pendingResultRef = useRef<string | null>(null);
-
-useEffect(() => {
-  if (pendingHistoryRef.current) {
-    addHistoryEntry(pendingHistoryRef.current);
-  }
-  if (pendingResultRef.current && voiceEnabledRef.current) {
-    speakResult(pendingResultRef.current);
-  }
-}, [history]);
+useCalculator(voiceEnabled, mode)
+// basic:      currentInput / operation / lastOperation（重复等号）
+// scientific: expression / result / angleMode（DEG/RAD）
 ```
 
 ### 2. 表达式解析引擎
 
-实现完整的数学表达式解析器：
-
 ```typescript
-// 输入: "(2 + 3) × 4"
-// 词法分析 → [Token: (, 2, +, 3, ), ×, 4]
-// 中缀转后缀 → [2, 3, +, 4, ×]
+evaluateExpression('(2+3)×4', 'deg')
+// 词法分析 → [(, 2, +, 3, ), ×, 4]
+// Shunting-yard → [2, 3, +, 4, ×]
 // 后缀求值 → 20
 ```
 
-支持特性：
-- 括号嵌套
-- 运算符优先级（^, ×, ÷, +, -）
-- 右结合幂运算（2^3^2 = 2^(3^2)）
-- 11 个科学函数
+- 函数按钮通过 `findOperandStart` 定位尾部操作数并包裹：`30` + `sin` → `sin(30)`
+- `evalPreview` 对未完成输入（尾随运算符/未闭合括号）逐步裁剪求值，实现实时预览
 
-### 3. 语音播报系统
+### 3. 副作用管理
 
-```typescript
-// 科学函数语音映射
-const SCIENTIFIC_TO_SPEECH = {
-  'sin': '正弦',
-  'cos': '余弦',
-  '√': '平方根',
-  'π': '派',
-  // ... 20 个科学函数
-};
-```
-
-### 4. 汇率缓存策略
+ref + useEffect 模式消除 React 并发模式下 setState 回调内副作用重复执行的问题：
 
 ```typescript
-// 5 分钟缓存 + useRef 避免 stale closure
-if (Date.now() - lastFetchRef.current < 5 * 60 * 1000) {
-  return cachedRates;
-}
+const pendingHistoryRef = useRef<HistoryEntry | null>(null);
+const pendingResultRef = useRef<string | null>(null);
+useEffect(() => {
+  if (pendingHistoryRef.current) { addHistoryEntry(...); }
+  if (pendingResultRef.current && voiceEnabledRef.current) { speakResult(...); }
+});
 ```
 
-## 📱 功能截图
+### 4. 汇率容错链
 
-### 基础计算模式
-- 简洁的 5 行 × 4 列布局
-- 大按钮易于点击
-- 运算符橙色高亮
-
-### 科学计算模式
-- 科学函数区（上部分）
-- 基础键盘区（下部分）
-- 清晰的分隔线
-- 支持滚动浏览
-
-### 历史记录
-- 自动保存计算过程
-- 支持清除历史
-- 点击恢复历史结果
+```
+fetch（10s 超时）→ 成功：更新模块级缓存 + AsyncStorage
+                  → 失败：模块级缓存 → AsyncStorage 缓存 → 预设汇率
+```
 
 ## 🔄 版本历史
 
-### v1.0.0 (当前版本)
+### v1.1.0 (当前版本)
 
 **新增功能：**
-- ✅ 科学计算模式（20 个科学函数）
-- ✅ 中文语音播报系统
-- ✅ 括号表达式支持
-- ✅ 表达式解析引擎
-- ✅ 历史记录持久化
-- ✅ 汇率转换功能
-- ✅ 错误边界组件
+- ✅ 科学模式表达式引擎（括号、优先级、一元负号、隐式乘法、实时预览）
+- ✅ DEG/RAD 角度切换
+- ✅ 单位换算（长度/重量/温度）
+- ✅ 重复等号、滑动退格、长按复制结果
+- ✅ 横屏自动进入科学模式
+- ✅ 显示屏运算上下文预览、历史时间戳
+- ✅ 无障碍标签（VoiceOver/TalkBack）
 
-**代码质量：**
-- ✅ TypeScript 严格模式零错误
-- ✅ 113 个测试用例全覆盖
-- ✅ React 19 兼容
-- ✅ Expo SDK 55
-- ✅ 消除所有副作用问题
-- ✅ 优化性能（防抖、缓存）
+**问题修复：**
+- ✅ 连续运算符遇除零导致 App 崩溃（P0）
+- ✅ 历史记录启动保存竞态（P0）
+- ✅ 负数立方根误报错误（Math.cbrt）
+- ✅ 错误状态下 ±/% 产生乱码
+- ✅ tan(90°) 显示天文数字
+- ✅ 语音开关启动写入竞态
+- ✅ 汇率请求无超时、缓存跨页面失效
 
-**UI/UX 优化：**
-- ✅ 响应式布局
-- ✅ 科学按钮按功能分组
-- ✅ 统一的按钮颜色和尺寸
-- ✅ 语音开关控制
-- ✅ 友好的错误处理界面
+### v1.0.0
+
+- 基础/科学双模式、中文语音播报、历史记录持久化、汇率转换、错误边界
 
 ## 🤝 贡献
 
@@ -294,11 +230,9 @@ MIT License
 
 ## 👨‍💻 开发者
 
-- **姓名**: raozhengrong
-- **邮箱**: michael.rao@gmail.com
 - **GitHub**: [@raozhengrong](https://github.com/raozhengrong)
 
 ---
 
-**最后更新**: 2026-06-23  
+**最后更新**: 2026-07-20  
 **Expo SDK**: 55 | **React Native**: 0.83.9 | **TypeScript**: 5.9.2

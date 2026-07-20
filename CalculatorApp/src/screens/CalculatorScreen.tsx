@@ -7,8 +7,10 @@ import {
   StyleSheet,
   useWindowDimensions,
   ScrollView,
+  PanResponder,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Clipboard from 'expo-clipboard';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { CalcMode, Operator } from '../types';
@@ -18,7 +20,7 @@ import { loadHistory, saveHistory } from '../storage/history';
 import { loadVoiceEnabled, saveVoiceEnabled } from '../storage/settings';
 import Display from '../components/Display';
 import ModeSwitcher from '../components/ModeSwitcher';
-import { speakDigit, speakOperator, speakScientific, stopSpeech } from '../utils/speech';
+import { speakDigit, speakOperator, speakScientific, speakText, stopSpeech } from '../utils/speech';
 import Button from '../components/Button';
 import { RootStackParamList } from '../navigation/AppNavigator';
 
@@ -26,7 +28,7 @@ interface BtnDef {
   label: string;
   type: 'number' | 'function' | 'operator' | 'scientific';
   span?: 1 | 2;
-  action?: 'digit' | 'op' | 'equals' | 'clear' | 'toggle' | 'percent' | 'power' | 'backspace';
+  action?: 'digit' | 'op' | 'equals' | 'clear' | 'toggle' | 'percent' | 'power' | 'backspace' | 'paren';
 }
 
 const BASIC_BUTTONS: BtnDef[] = [
@@ -53,6 +55,8 @@ const BASIC_BUTTONS: BtnDef[] = [
 
 const SCIENTIFIC_BUTTONS: BtnDef[] = [
   { label: '⌫', type: 'operator', action: 'backspace' },
+  { label: '(', type: 'scientific', action: 'paren' },
+  { label: ')', type: 'scientific', action: 'paren' },
   { label: 'n!', type: 'scientific' },
   { label: 'π', type: 'scientific' },
   { label: 'e', type: 'scientific' },
@@ -93,10 +97,19 @@ export default function CalculatorScreen() {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const insets = useSafeAreaInsets();
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const historyLoadedRef = useRef(false);
+  const voiceLoadedRef = useRef(false);
+
+  // landscape always shows the scientific keypad (iOS behavior)
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const isLandscape = screenWidth > screenHeight;
+  const effectiveMode: CalcMode = isLandscape ? 'scientific' : calcMode;
 
   const {
     display,
+    expressionPreview,
     history,
+    angleMode,
     handleDigit,
     handleOperation,
     handleEquals,
@@ -105,26 +118,35 @@ export default function CalculatorScreen() {
     handlePercent,
     handleBackspace,
     handleScientific,
+    handleParen,
+    handleToggleAngle,
     setDisplayValue,
     clearHistory,
     loadHistory: loadCalcHistory,
-  } = useCalculator(voiceEnabled);
+  } = useCalculator(voiceEnabled, effectiveMode);
 
   useEffect(() => {
     loadHistory().then((entries) => {
       loadCalcHistory(entries);
+      historyLoadedRef.current = true;
     });
   }, []);
 
   useEffect(() => {
-    loadVoiceEnabled().then(setVoiceEnabled);
+    loadVoiceEnabled().then((v) => {
+      setVoiceEnabled(v);
+      voiceLoadedRef.current = true;
+    });
   }, []);
 
   useEffect(() => {
-    saveVoiceEnabled(voiceEnabled);
+    if (voiceLoadedRef.current) {
+      saveVoiceEnabled(voiceEnabled);
+    }
   }, [voiceEnabled]);
 
   useEffect(() => {
+    if (!historyLoadedRef.current) return;
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
@@ -150,7 +172,6 @@ export default function CalculatorScreen() {
     }
   }, [route.params?.restoreValue]);
 
-  const { width: screenWidth } = useWindowDimensions();
   const cols = 4;
   const gap = 8;
   const btnSize = (screenWidth - gap * (cols + 1)) / cols;
@@ -164,6 +185,7 @@ export default function CalculatorScreen() {
     percent: () => { if (voiceEnabled) speakOperator('%'); handlePercent(); },
     power: () => { if (voiceEnabled) speakScientific('xʸ'); handleOperation('^'); },
     backspace: () => { if (voiceEnabled) speakScientific('⌫'); handleBackspace(); },
+    paren: (l) => { if (voiceEnabled) speakScientific(l); handleParen(l); },
   };
 
   const onButtonPress = (btn: BtnDef) => {
@@ -175,6 +197,20 @@ export default function CalculatorScreen() {
       handleScientific(btn.label);
     }
   };
+
+  // iOS-style: swipe horizontally on the display to delete the last digit
+  const swipeActionsRef = useRef({ handleBackspace, voiceEnabled });
+  swipeActionsRef.current = { handleBackspace, voiceEnabled };
+  const displaySwipe = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gesture) =>
+        Math.abs(gesture.dx) > 24 && Math.abs(gesture.dy) < 16,
+      onPanResponderRelease: () => {
+        if (swipeActionsRef.current.voiceEnabled) speakScientific('⌫');
+        swipeActionsRef.current.handleBackspace();
+      },
+    })
+  ).current;
 
   const buildRows = (buttons: BtnDef[]) => {
     const gridCols = 4;
@@ -249,32 +285,60 @@ export default function CalculatorScreen() {
   return (
     <View style={styles.container}>
       <View style={[styles.toolbar, { paddingTop: insets.top + 8 }]}>
-        <Pressable
-          style={styles.toolbarBtn}
-          onPress={() => navigation.navigate('History')}
-          hitSlop={8}
-        >
-          <Text style={styles.toolbarBtnText}>📋</Text>
-        </Pressable>
+        <View style={styles.toolbarGroup}>
+          <Pressable
+            style={styles.toolbarBtn}
+            onPress={() => navigation.navigate('History')}
+            accessibilityLabel="历史记录"
+            hitSlop={8}
+          >
+            <Text style={styles.toolbarBtnText}>📋</Text>
+          </Pressable>
+          {effectiveMode === 'scientific' ? (
+            <Pressable
+              style={styles.angleBtn}
+              onPress={() => {
+                handleToggleAngle();
+                if (voiceEnabled) speakScientific(angleMode === 'deg' ? 'RAD' : 'DEG');
+              }}
+              hitSlop={8}
+            >
+              <Text style={styles.angleBtnText}>{angleMode === 'deg' ? 'DEG' : 'RAD'}</Text>
+            </Pressable>
+          ) : null}
+        </View>
         <Text style={styles.toolbarTitle}>计算器</Text>
-        <Pressable
-          style={styles.toolbarBtn}
-          onPress={() => setVoiceEnabled(!voiceEnabled)}
-          hitSlop={8}
-        >
-          <Text style={styles.toolbarBtnText}>{voiceEnabled ? '🔊' : '🔇'}</Text>
-        </Pressable>
-        <Pressable
-          style={styles.toolbarBtn}
-          onPress={() => setMenuVisible(true)}
-          hitSlop={8}
-        >
-          <Text style={styles.toolbarBtnText}>☰</Text>
-        </Pressable>
+        <View style={styles.toolbarGroup}>
+          <Pressable
+            style={styles.toolbarBtn}
+            onPress={() => setVoiceEnabled(!voiceEnabled)}
+            accessibilityLabel={voiceEnabled ? '关闭语音播报' : '开启语音播报'}
+            hitSlop={8}
+          >
+            <Text style={styles.toolbarBtnText}>{voiceEnabled ? '🔊' : '🔇'}</Text>
+          </Pressable>
+          <Pressable
+            style={styles.toolbarBtn}
+            onPress={() => setMenuVisible(true)}
+            accessibilityLabel="模式菜单"
+            hitSlop={8}
+          >
+            <Text style={styles.toolbarBtnText}>☰</Text>
+          </Pressable>
+        </View>
       </View>
-      <Display value={display} />
-      <ModeSwitcher mode={calcMode} onModeChange={setCalcMode} />
-      {calcMode === 'scientific' ? (
+      <Pressable
+        {...displaySwipe.panHandlers}
+        onLongPress={async () => {
+          await Clipboard.setStringAsync(display);
+          if (voiceEnabled) speakText('已复制');
+        }}
+        accessibilityLabel={`显示区域，当前值 ${display}`}
+      >
+        <Display value={display} expression={expressionPreview} />
+      </Pressable>
+      {!isLandscape && <ModeSwitcher mode={calcMode} onModeChange={setCalcMode} />}
+      {effectiveMode === 'scientific' ? (
         <ScrollView style={styles.gridScroll} contentContainerStyle={styles.gridScrollContent}>
           {renderScientificButtons()}
           <View style={styles.sectionDivider} />
@@ -300,6 +364,7 @@ export default function CalculatorScreen() {
               { label: '基础', icon: '➕' },
               { label: '科学', icon: '🔬' },
               { label: '汇率', icon: '💱' },
+              { label: '单位', icon: '📏' },
             ].map((item) => {
               const isCurrent = item.label === MODE_LABELS[calcMode];
               return (
@@ -310,6 +375,8 @@ export default function CalculatorScreen() {
                     setMenuVisible(false);
                     if (item.label === '汇率') {
                       navigation.navigate('Currency');
+                    } else if (item.label === '单位') {
+                      navigation.navigate('Unit');
                     } else {
                       setCalcMode(item.label === MODE_LABELS.basic ? 'basic' : 'scientific');
                     }
@@ -347,6 +414,22 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  toolbarGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minWidth: 80,
+  },
+  angleBtn: {
+    height: 40,
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  angleBtnText: {
+    color: colors.secondaryText,
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   toolbarBtnText: {
     color: colors.opKey,

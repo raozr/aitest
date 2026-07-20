@@ -34,7 +34,17 @@ export function inputNumber(state: CalculatorState, digit: string): CalculatorSt
 
 export function inputOperation(state: CalculatorState, op: Operator): CalculatorState {
   if (state.operation && !state.shouldResetDisplay) {
-    const result = calculateResult(state);
+    let result: CalculatorState;
+    try {
+      result = calculateResult(state);
+    } catch {
+      return {
+        currentInput: '错误',
+        previousInput: '',
+        operation: null,
+        shouldResetDisplay: true,
+      };
+    }
     return {
       ...result,
       previousInput: result.currentInput,
@@ -94,14 +104,15 @@ export function clearAll(): CalculatorState {
 }
 
 export function toggleSign(input: string): string {
-  if (input === '0') return input;
+  if (input === '0' || input === '错误') return input;
   if (input.startsWith('-')) return input.slice(1);
   return '-' + input;
 }
 
 export function percentage(input: string): string {
-  const result = parseFloat(input) / 100;
-  return String(roundResult(result));
+  const value = parseFloat(input);
+  if (isNaN(value)) return input;
+  return String(roundResult(value / 100));
 }
 
 export function backspace(input: string): string {
@@ -125,59 +136,6 @@ export function formatHistoryEntry(
   result: string
 ): string {
   return `${a} ${op} ${b} = ${result}`;
-}
-
-export function scientificFunc(func: string, value: number): number {
-  switch (func) {
-    case 'sin':
-      return roundResult(Math.sin(toRadians(value)));
-    case 'cos':
-      return roundResult(Math.cos(toRadians(value)));
-    case 'tan':
-      return roundResult(Math.tan(toRadians(value)));
-    case 'ln':
-      return roundResult(Math.log(value));
-    case 'log':
-      return roundResult(Math.log10(value));
-    case 'x²':
-      return roundResult(value ** 2);
-    case 'x³':
-      return roundResult(value ** 3);
-    case '√':
-      return roundResult(Math.sqrt(value));
-    case '∛':
-      return roundResult(value ** (1 / 3));
-    case 'π':
-      return Math.PI;
-    case 'e':
-      return Math.E;
-    case 'n!':
-      return roundResult(factorial(Math.floor(value)));
-    case '1/x':
-      return roundResult(1 / value);
-    case '|x|':
-      return roundResult(Math.abs(value));
-    case 'eˣ':
-      return roundResult(Math.exp(value));
-    case '10ˣ':
-      return roundResult(Math.pow(10, value));
-    default:
-      return value;
-  }
-}
-
-function toRadians(degrees: number): number {
-  return (degrees * Math.PI) / 180;
-}
-
-function factorial(n: number): number {
-  if (n < 0) return NaN;
-  if (n > 170) return Infinity;
-  let result = 1;
-  for (let i = 2; i <= n; i++) {
-    result *= i;
-  }
-  return result;
 }
 
 export function roundResult(value: number): number {

@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import CalculatorScreen from '../screens/CalculatorScreen';
 import CurrencyScreen from '../screens/CurrencyScreen';
 import HistoryScreen from '../screens/HistoryScreen';
+import UnitScreen from '../screens/UnitScreen';
 import { colors } from '../constants/theme';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 
@@ -10,6 +11,7 @@ export type RootStackParamList = {
   Calculator: { restoreValue?: string } | undefined;
   Currency: undefined;
   History: undefined;
+  Unit: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -40,6 +42,11 @@ export default function AppNavigator() {
           name="History"
           component={HistoryScreen}
           options={{ title: '历史记录' }}
+        />
+        <Stack.Screen
+          name="Unit"
+          component={UnitScreen}
+          options={{ title: '单位换算' }}
         />
       </Stack.Navigator>
     </ErrorBoundary>

@@ -27,6 +27,8 @@ const SCIENTIFIC_TO_SPEECH: Record<string, string> = {
   '⌫': '退格',
   '(': '左括号',
   ')': '右括号',
+  DEG: '角度制',
+  RAD: '弧度制',
   'n!': '阶乘',
   'π': '派',
   'e': '自然常数',
@@ -65,6 +67,11 @@ export function speakOperator(op: string): void {
 
 export function speakScientific(func: string): void {
   const text = SCIENTIFIC_TO_SPEECH[func];
+  if (!text) return;
+  Speech.speak(text, SPEECH_OPTIONS);
+}
+
+export function speakText(text: string): void {
   if (!text) return;
   Speech.speak(text, SPEECH_OPTIONS);
 }

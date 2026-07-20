@@ -18,7 +18,4 @@ export const colors = {
 
 export const typography = {
   display: { fontSize: 48, fontWeight: '300' as const },
-  keyNumber: { fontSize: 28, fontWeight: '400' as const },
-  keyFunction: { fontSize: 24, fontWeight: '400' as const },
-  keyOperator: { fontSize: 30, fontWeight: '500' as const },
 };
