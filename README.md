@@ -9,9 +9,9 @@ iOS 深色风格计算器，支持**桌面端**（Python tkinter）和**移动�
 | **目录** | `cu.py` | `CalculatorApp/` |
 | **框架** | Python tkinter | React Native 0.83 + Expo SDK 55 |
 | **语言** | Python 3.13 | TypeScript 5.9（严格模式） |
-| **代码量** | ~1070 行（单文件） | 25+ 个模块 |
+| **代码量** | ~2200 行（单文件） | 25+ 个模块 |
 | **平台** | Windows / macOS / Linux（需 GUI） | iOS / Android / Web |
-| **测试** | 手动 | Jest（163 项，全部通过） |
+| **测试** | `test_cu_smoke.py`（86 项） | Jest（165 项，全部通过） |
 | **构建** | PyInstaller → `dist/计算器.exe` | EAS Build / Expo Go |
 
 ---
@@ -25,6 +25,8 @@ iOS 深色风格计算器，支持**桌面端**（Python tkinter）和**移动�
 ```bash
 python cu.py
 ```
+
+> 建议 Python 3.11+（`math.cbrt` 需要；旧版本已内置 `_cbrt` 回退，3.9+ 亦可运行）。
 
 macOS（Homebrew Python 需单独安装 tkinter）：
 
@@ -71,7 +73,7 @@ React Native + Expo 构建的移动端应用，TypeScript 类型安全。
 | `npm install` | 安装依赖 |
 | `npm start` | 启动 Expo 开发服务器（Expo Go 扫码） |
 | `npm run web` | 浏览器预览（用于布局验证） |
-| `npm test` | 运行全部 163 项 Jest 测试 |
+| `npm test` | 运行全部 165 项 Jest 测试 |
 | `npx tsc --noEmit` | TypeScript 类型检查 |
 
 ### 核心特性
@@ -130,7 +132,7 @@ CalculatorApp/
 │       ├── settings.ts         # 语音开关持久化
 │       └── rates.ts            # 汇率离线缓存
 │
-└── __tests__/                  # 163 项 Jest 测试
+└── __tests__/                  # 165 项 Jest 测试
     ├── calculator.test.ts      # 基础计算引擎（含除零链式回归）
  │   ├── expressionParser.test.ts # 表达式解析器（66 项）
     ├── useCalculator.test.ts   # Hook 双模式状态测试
@@ -216,14 +218,14 @@ iOS 深色风格，双平台统一配色：
 
 ```
 aitest/
-├── cu.py                   # 桌面版主程序（Python tkinter，~1070 行）
+├── cu.py                   # 桌面版主程序（Python tkinter，~2200 行）
+├── test_cu_smoke.py        # 桌面版冒烟测试（86 项）
 ├── CalculatorApp/          # 移动版完整项目
 │   ├── App.tsx             # Expo 应用入口
 │   ├── src/                # TypeScript 源码（25+ 模块）
-│   ├── __tests__/          # 163 项 Jest 测试
+│   ├── __tests__/          # 165 项 Jest 测试
 │   └── README.md           # 移动版详细文档
 ├── CLAUDE.md               # Claude Code 项目指引
-├── AGENTS.md               # Agent 工作指引
 ├── spec-mobile-app.md      # 移动版迁移规范
 ├── spec-voice.md           # 语音播报功能规范
 ├── spec-ios-ui.md          # iOS UI 规范

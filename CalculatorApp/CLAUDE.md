@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working on this React Native Expo calculator app.
 
-Mobile version of the Python tkinter calculator (`cu.py` in the parent directory).
+Mobile version of the Python tkinter calculator (`cu.py` in the parent directory). Expo SDK 55.
 
 ## Commands
 
@@ -18,23 +18,26 @@ npx expo start --web  # Web preview
 
 ```
 src/
-├── types/index.ts          — TypeScript types (CalculatorState, Operator, etc.)
-├── constants/theme.ts      — iOS dark theme colors & typography
-├── utils/calculator.ts     — Pure calculation functions (ported from cu.py)
-├── utils/rates.ts          — Exchange rate API client + fallback rates
-├── utils/speech.ts         — Chinese TTS speech (expo-speech, zh-CN)
-├── hooks/useCalculator.ts  — Calculator state machine hook
-├── hooks/useExchangeRates.ts — Rate fetching with 5-min cache
-├── components/             — Reusable UI components
-├── screens/                — Screen-level components
-├── navigation/             — Stack navigator setup
-│   storage/history.ts      — AsyncStorage read/write
+├── types/index.ts             — TypeScript types (CalculatorState, Operator, CalcMode, etc.)
+├── constants/theme.ts         — iOS dark theme colors & typography
+├── utils/calculator.ts        — Basic-mode pure calculation functions (ported from cu.py)
+├── utils/expressionParser.ts  — Expression parser (Shunting-yard) for scientific mode
+├── utils/rates.ts             — Exchange rate API client + fallback rates
+├── utils/units.ts             — Unit conversion (length/weight/temperature)
+├── utils/speech.ts            — Chinese TTS speech (expo-speech, zh-CN)
+├── hooks/useCalculator.ts     — Dual-mode calculator state machine hook
+├── hooks/useExchangeRates.ts  — Rate fetching with 5-min cache + offline fallback
+├── components/                — Reusable UI components (Button, Display, ModeSwitcher,
+│                                CurrencySelector, HistoryList, ErrorBoundary)
+├── screens/                   — Calculator, Currency, Unit, History screens
+├── navigation/AppNavigator.ts — Stack navigator setup
+└── storage/                   — history.ts, settings.ts, rates.ts (AsyncStorage)
 ```
 
 ## Key rules
 
-- **All calculation logic in pure functions** in `utils/calculator.ts` — NO UI logic
+- **All calculation logic in pure functions** in `utils/calculator.ts` and `utils/expressionParser.ts` — NO UI logic
 - iOS dark theme: `#000000` bg, `#333333` num keys, `#FF9500` operators
-- SegmentedControl switches basic/scientific mode in CalculatorScreen
-- Exchange rate API failure → fallback to hardcoded rates
+- SegmentedControl (ModeSwitcher) switches basic/scientific mode in CalculatorScreen; landscape forces scientific
+- Exchange rate API failure → module cache → AsyncStorage cache → fallback to hardcoded rates
 - `package-lock.json` committed to git

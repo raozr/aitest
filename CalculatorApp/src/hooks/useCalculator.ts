@@ -421,7 +421,8 @@ export function useCalculator(
       currentInput: value,
       shouldResetDisplay: true,
     }));
-    setExprState({ expression: '', result: null });
+    // 同时写入表达式状态，使科学模式（含横屏强制科学）下历史回填也能显示结果
+    setExprState({ expression: value, result: null });
   }, []);
 
   const clearHistory = useCallback(() => {

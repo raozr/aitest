@@ -47,6 +47,14 @@ def _factorial(n):
     return result
 
 
+if hasattr(math, "cbrt"):
+    _cbrt = math.cbrt
+else:
+    def _cbrt(x):
+        """math.cbrt 需要 Python 3.11+，旧版本用符号保持的回退实现"""
+        return math.copysign(abs(x) ** (1.0 / 3.0), x)
+
+
 def _apply_func(name, x, angle):
     if name == "sin":
         return math.sin(_to_radians(x) if angle == "DEG" else x)
@@ -62,7 +70,7 @@ def _apply_func(name, x, angle):
     if name == "sqrt":
         return math.sqrt(x)
     if name == "cbrt":
-        return math.cbrt(x)
+        return _cbrt(x)
     if name == "abs":
         return abs(x)
     if name == "exp":
@@ -723,6 +731,13 @@ class ScientificMode:
 # 汇率模式
 # ======================================================================
 
+def _bind_children(widget, callback):
+    """递归绑定 widget 及其所有子控件的 <Button-1> 事件"""
+    widget.bind("<Button-1>", callback)
+    for child in widget.winfo_children():
+        _bind_children(child, callback)
+
+
 class CurrencyMode:
     """汇率模式 - 实时汇率（10s 超时 + 5 分钟缓存 + 固定汇率降级）"""
 
@@ -806,11 +821,6 @@ class CurrencyMode:
         # --- 货币选择器 ---
         sel_row = tk.Frame(inner, bg=self.CARD_BG)
         sel_row.pack(fill="x", pady=(0, 16))
-
-        def _bind_children(widget, callback):
-            widget.bind("<Button-1>", callback)
-            for child in widget.winfo_children():
-                _bind_children(child, callback)
 
         from_frame = tk.Frame(sel_row, bg=self.CARD_BG)
         from_frame.pack(side="left", fill="x", expand=True)
@@ -1129,11 +1139,6 @@ class UnitMode:
         # --- 单位选择器 ---
         sel_row = tk.Frame(inner, bg=self.CARD_BG)
         sel_row.pack(fill="x", pady=(0, 8))
-
-        def _bind_children(widget, callback):
-            widget.bind("<Button-1>", callback)
-            for child in widget.winfo_children():
-                _bind_children(child, callback)
 
         from_frame = tk.Frame(sel_row, bg=self.CARD_BG)
         from_frame.pack(side="left", fill="x", expand=True)

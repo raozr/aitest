@@ -302,4 +302,18 @@ describe('useCalculator', () => {
       expect(result.current.history[1].id).toBe('11');
     });
   });
+
+  describe('setDisplayValue (history restore)', () => {
+    it('restores value in basic mode', () => {
+      const { result } = renderHook(() => useCalculator());
+      act(() => result.current.setDisplayValue('42'));
+      expect(result.current.display).toBe('42');
+    });
+
+    it('restores value in scientific mode', () => {
+      const { result } = renderHook(() => useCalculator(true, 'scientific'));
+      act(() => result.current.setDisplayValue('42'));
+      expect(result.current.display).toBe('42');
+    });
+  });
 });
